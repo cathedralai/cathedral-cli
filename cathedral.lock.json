@@ -1,0 +1,62 @@
+{
+  "schema": "cathedral.node.lock.v1",
+  "generated_at": "2026-07-30T23:00:00Z",
+  "note": "Pinned upstream engine revisions. A node installs exactly these commits. Changing a pin is a reviewed change: run `cathedral update --check` to see what a newer pin would bring, and `cathedral update --to <lockfile>` to apply one.",
+  "engines": {
+    "distill": {
+      "repository": "https://github.com/cathedralai/cathedral-distill.git",
+      "revision": "1488579842dcb4d990ab17a879197ac9a1e84ead",
+      "branch": "main",
+      "distribution": "cathedral-cybergym",
+      "verified_at": "2026-07-30T23:00:00Z",
+      "role": "Distill mining and verification (CyberGym vulnerability discovery)"
+    },
+    "compute": {
+      "repository": "https://github.com/cathedralai/cathedral-compute.git",
+      "revision": "f3016a4521bbe668ade04c3b3c752aff835b42b8",
+      "branch": "main",
+      "distribution": "cathedral",
+      "verified_at": "2026-07-30T23:00:00Z",
+      "role": "Verified Compute mining and evidence (Intel TDX)"
+    },
+    "validator": {
+      "repository": "https://github.com/cathedralai/cathedral-validator.git",
+      "revision": "80dd56e4f4317f854e95efc4808d92b688756e3e",
+      "branch": "main",
+      "distribution": "cathedral-scaffold",
+      "verified_at": "2026-07-30T23:00:00Z",
+      "role": "Validation, composition, burn handling, guarded weight submission"
+    }
+  },
+  "excluded": {
+    "cathedralai/cathedral": "Legacy. Audited for required functionality; never installed and never exposed. Its publisher, validator, and mining paths are out of scope for this node."
+  },
+  "launch_profile": {
+    "note": "The exact install target per role. The validator's CPU+Distill seam lives in its `integration` extra; a base-only validator generation is not launch-correct. Bound into the generation receipt and the signed release lock.",
+    "distill": {
+      "extras": [],
+      "launch_mode": "cybergym",
+      "entrypoints": ["cathedral-cybergym-agent"],
+      "server_entrypoints": ["cathedral-cybergym-server"],
+      "protocol": "1.0.0"
+    },
+    "compute": {
+      "extras": [],
+      "launch_mode": "worker",
+      "entrypoints": ["cathedral"],
+      "server_entrypoints": [],
+      "protocol": "1.0.0"
+    },
+    "validator": {
+      "extras": ["integration"],
+      "launch_mode": "integration",
+      "entrypoints": ["cathedral-validator-integration-preview"],
+      "server_entrypoints": ["cathedral-validator"],
+      "protocol": "1.0.0"
+    }
+  },
+  "compatibility": {
+    "python": ">=3.11,<3.14",
+    "protocol_version": "1.0.0"
+  }
+}

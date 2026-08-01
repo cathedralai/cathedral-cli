@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+"""Cathedral node — one command for Distill mining, Compute mining, and validation.
+
+Zero dependencies beyond the standard library, on purpose: `git clone` then run
+this file. Nothing to install before you can find out whether your machine
+qualifies.
+"""
+import sys
+from pathlib import Path
+
+if sys.version_info < (3, 11):
+    sys.stderr.write(
+        f"cathedral needs Python 3.11 or newer; this is {sys.version.split()[0]}.\n"
+        "Install a newer Python and run this again.\n"
+    )
+    raise SystemExit(10)
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from cathedral_node.cli import main  # noqa: E402
+
+if __name__ == "__main__":
+    raise SystemExit(main())

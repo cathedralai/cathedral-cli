@@ -1,0 +1,7 @@
+upstream/
+.verify/
+.venv*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+RECOVERY-SOURCES.tsv

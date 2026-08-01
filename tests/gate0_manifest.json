@@ -1,0 +1,1214 @@
+{
+  "schema": "cathedral.gate0.requirement_manifest.v1",
+  "specification": {
+    "document": "CATHEDRAL-CLI-LAUNCH-PRD-TECH-SPEC-20260731.md",
+    "revision": 5,
+    "sha256": "c1d6f1be5a44dd1c773089d6d4214290a72774f619336590cc17869608fff2d1",
+    "review": {
+      "document": "GATE0-INDEPENDENT-REVIEW-20260731.md",
+      "sha256": "0a9f4f1ad0d0853d0a67cb7678e635f126c20564e51c1a3d2a64996673928c31"
+    },
+    "repair_directive": {
+      "document": "GATE0-FABLE-REPAIR-DIRECTIVE-20260731.md",
+      "sha256": "e92760de335c92527cb414bde4334e741c04ef1741a8fcb29345dc904bd39d1f"
+    }
+  },
+  "command": "python -m pytest -q tests/test_gate0.py tests/test_contract.py",
+  "files": [
+    "tests/test_gate0.py",
+    "tests/test_contract.py"
+  ],
+  "node_id_count": 366,
+  "requirements": [
+    {
+      "id": "G0-IMPL-01",
+      "source": "PRD 8.1",
+      "statement": "Strictly parse the active pointer with an exact key set.",
+      "tests": [
+        "tests/test_gate0.py::TestActiveGroupTamper::test_a_symlinked_pointer_is_refused",
+        "tests/test_gate0.py::TestActiveGroupTamper::test_pointer_field_tampers"
+      ]
+    },
+    {
+      "id": "G0-IMPL-02",
+      "source": "PRD 8.2",
+      "statement": "Obtain the trust root from protected configuration, never the pointer.",
+      "tests": [
+        "tests/test_gate0.py::TestActiveGroupTamper::test_a_trust_root_that_does_not_authorize_the_release_identity_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_symlinked_allowed_signers_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_world_writable_allowed_signers_is_refused"
+      ]
+    },
+    {
+      "id": "G0-IMPL-03",
+      "source": "PRD 8.3-8.6",
+      "statement": "Read the retained manifest and signature under the named release digest, reverify the signature with the pinned release identity, strictly parse it, and bind the manifest and signature digests to the pointer.",
+      "tests": [
+        "tests/test_gate0.py::TestActiveGroupTamper::test_retained_manifest_and_signature_tampers"
+      ]
+    },
+    {
+      "id": "G0-IMPL-04",
+      "source": "PRD 8.7",
+      "statement": "Bind version and digest to the durable replay floor.",
+      "tests": [
+        "tests/test_gate0.py::TestActiveGroupTamper::test_missing_or_corrupt_floor_fails_closed",
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_active_pointer_must_exactly_equal_floor"
+      ]
+    },
+    {
+      "id": "G0-IMPL-05",
+      "source": "PRD 8.8",
+      "statement": "Require exactly the three canonical roles.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_a_release_that_is_not_the_full_role_set_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_release_missing_a_role_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unknown_role_is_refused"
+      ]
+    },
+    {
+      "id": "G0-IMPL-06",
+      "source": "PRD 8.9",
+      "statement": "Reauthorize every signed role against the current local lock.",
+      "tests": [
+        "tests/test_gate0.py::TestReleaseVerification::test_a_forged_revision_is_not_authorized_by_the_local_lock"
+      ]
+    },
+    {
+      "id": "G0-IMPL-07",
+      "source": "PRD 8.10",
+      "statement": "Fully verify every generation and receipt against the signed role, pointer, current lock and filesystem.",
+      "tests": [
+        "tests/test_gate0.py::TestActiveGroupTamper::test_baseline_group_verifies",
+        "tests/test_gate0.py::TestReceiptBinding::test_every_receipt_provenance_field_changed_individually_is_refused"
+      ]
+    },
+    {
+      "id": "G0-IMPL-08",
+      "source": "PRD 8.11",
+      "statement": "Return a sealed verified group used by all execution paths.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_runtime_executes_only_paths_from_the_verified_group_snapshot",
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_verified_group_is_private_frozen_and_role_map_is_immutable"
+      ]
+    },
+    {
+      "id": "G0-IMPL-09",
+      "source": "PRD 8.12",
+      "statement": "Reverify no-op updates.",
+      "tests": [
+        "tests/test_gate0.py::TestActiveGroupTamper::test_a_no_op_reapply_over_a_tampered_generation_does_not_falsely_succeed",
+        "tests/test_gate0.py::TestActiveGroupTamper::test_a_valid_no_op_reapply_is_idempotent_and_reverifies"
+      ]
+    },
+    {
+      "id": "G0-IMPL-10",
+      "source": "PRD 8.13",
+      "statement": "Reverify both pending and prior groups during recovery.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_recovery_commits_a_valid_pending_group",
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_valid_prior_is_independently_verified_before_restart"
+      ]
+    },
+    {
+      "id": "G0-ATK-POINTER",
+      "source": "PRD 8 matrix 1",
+      "statement": "Pointer schema, state, roles, generation IDs, swaps, traversal, version, identity, release digest, signature digest, trust-path redirection, timestamp and prior pointer.",
+      "tests": [
+        "tests/test_gate0.py::TestActiveGroupTamper::test_prior_pointer_tampers",
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_stat_preserving_pointer_rewrite_is_not_cached"
+      ]
+    },
+    {
+      "id": "G0-ATK-RETAINED",
+      "source": "PRD 8 matrix 2",
+      "statement": "Missing, changed, cross-signed or cross-digest retained release.",
+      "tests": [
+        "tests/test_gate0.py::TestReleaseVerification::test_a_forged_signer_is_refused",
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_retained_release_tamper_after_first_state_is_not_cached"
+      ]
+    },
+    {
+      "id": "G0-ATK-RECEIPT-MISSING",
+      "source": "PRD 8 matrix 3",
+      "statement": "Every required receipt field missing individually.",
+      "tests": [
+        "tests/test_gate0.py::TestReceiptBinding::test_every_required_receipt_field_missing_individually_is_refused"
+      ]
+    },
+    {
+      "id": "G0-ATK-RECEIPT-CHANGED",
+      "source": "PRD 8 matrix 4",
+      "statement": "Every receipt provenance field changed individually.",
+      "tests": [
+        "tests/test_gate0.py::TestReceiptBinding::test_every_receipt_provenance_field_changed_individually_is_refused",
+        "tests/test_gate0.py::TestReceiptBinding::test_receipt_paths_types_and_timestamp_are_strict"
+      ]
+    },
+    {
+      "id": "G0-ATK-RECEIPT-UNKNOWN",
+      "source": "PRD 8 matrix 5",
+      "statement": "Unknown receipt field.",
+      "tests": [
+        "tests/test_gate0.py::TestReceiptBinding::test_an_unknown_receipt_field_is_refused"
+      ]
+    },
+    {
+      "id": "G0-ATK-CROSS",
+      "source": "PRD 8 matrix 6",
+      "statement": "Cross-role, cross-release, mixed-generation, same-version-different-digest, forged signer, forged revision, active-pointer-after-install and forged no-op attacks.",
+      "tests": [
+        "tests/test_gate0.py::TestActiveGroupTamper::test_cross_release_generation_selection_is_refused",
+        "tests/test_gate0.py::TestActiveGroupTamper::test_cross_role_receipt_swap",
+        "tests/test_gate0.py::TestReleaseVerification::test_replay_semantics"
+      ]
+    },
+    {
+      "id": "G0-ATK-FS",
+      "source": "PRD 8 matrix 7",
+      "statement": "Changed, deleted, extra, mode-changed, owner-changed, symlinked, interpreter-swapped, bytecode-planted or ancestor-symlinked managed files.",
+      "tests": [
+        "tests/test_gate0.py::TestActiveGroupTamper::test_a_group_writable_generation_or_receipt_is_refused",
+        "tests/test_gate0.py::TestActiveGroupTamper::test_filesystem_mutation_matrix",
+        "tests/test_gate0.py::TestInstallTransaction::test_generations_are_frozen_read_only_including_the_receipt"
+      ]
+    },
+    {
+      "id": "G0-ATK-TXN",
+      "source": "PRD 8 matrix 8",
+      "statement": "Receipt write failure, pending pointer write failure, crash after pending, failed health rollback, forged prior, corrupt floor and no-op revalidation.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_an_incomplete_generation_is_removed_when_preparation_fails",
+        "tests/test_gate0.py::TestInstallTransaction::test_failed_activation_health_rolls_back_and_preserves_the_prior_group",
+        "tests/test_gate0.py::TestInstallTransaction::test_pending_pointer_write_failure_leaves_no_committed_state",
+        "tests/test_gate0.py::TestInstallTransaction::test_read_only_state_reports_recovery_required_and_never_mutates",
+        "tests/test_gate0.py::TestInstallTransaction::test_receipt_write_failure_leaves_no_generation_or_pointer"
+      ]
+    },
+    {
+      "id": "G0-ATK-READY",
+      "source": "PRD 8 matrix 9",
+      "statement": "Role-specific readiness and liveness: immediate clean exit, immediate nonzero exit, wrong endpoint, stale PID, readiness timeout, hanging server and server exit after readiness.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_role_readiness_and_liveness_matrix"
+      ]
+    },
+    {
+      "id": "G0-ATK-ENV",
+      "source": "PRD 8 matrix 10",
+      "statement": "Minimal allowlisted environment for every signed engine check: no host PYTHONPATH, virtual environment selector, preload, proxy or credential variable crosses the boundary.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_pip_runs_offline_and_hardened_with_a_minimal_environment"
+      ]
+    },
+    {
+      "id": "G0-ATK-WHEEL",
+      "source": "PRD 8 matrix 11",
+      "statement": "Applicable wheel markers, platform tags, Python versions, ABI compatibility and every dependency version constraint.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_a_wheel_whose_internal_metadata_disagrees_is_rejected",
+        "tests/test_gate0.py::TestInstallTransaction::test_an_unsatisfiable_dependency_version_constraint_is_rejected",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_foreign_abi_or_platform_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_foreign_python_version_range_is_refused"
+      ]
+    },
+    {
+      "id": "G0-ATK-CLOSURE",
+      "source": "PRD 8 matrix 12",
+      "statement": "No network dependency resolution and no installed package outside the signed closure.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_a_base_only_validator_closure_is_rejected",
+        "tests/test_gate0.py::TestInstallTransaction::test_a_malicious_source_archive_is_never_built",
+        "tests/test_gate0.py::TestInstallTransaction::test_no_install_subprocess_runs_when_the_signature_fails"
+      ]
+    },
+    {
+      "id": "G0-ATK-LIFECYCLE",
+      "source": "PRD 8 matrix 13",
+      "statement": "Singleton ownership, process-group cleanup, concurrent update, lock ownership, stale-lock recovery, and idempotent stop and restart.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_a_concurrent_transaction_is_refused_not_interleaved",
+        "tests/test_gate0.py::TestInstallTransaction::test_a_stale_role_lock_is_reclaimed_and_stop_is_idempotent",
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_shared_runtime_guard_blocks_concurrent_activation_until_process_exit"
+      ]
+    },
+    {
+      "id": "G0-REL-SIGNED",
+      "source": "PRD 6 release invariants",
+      "statement": "One canonical signed manifest, pinned signer identity, exact artifact hashes, complete wheel closure, and no untrusted code before verification.",
+      "tests": [
+        "tests/test_gate0.py::TestAuthorizationImmutability::test_authorization_roles_are_read_only",
+        "tests/test_gate0.py::TestAuthorizationImmutability::test_authorized_bundle_cannot_be_forged",
+        "tests/test_gate0.py::TestAuthorizationImmutability::test_role_and_artifact_are_immutable",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_bad_signature_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_control_char_wheel_filename_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_duplicate_key_is_rejected",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_duplicate_normalized_package_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_foreign_abi_or_platform_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_foreign_python_version_range_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_forged_revision_is_not_authorized_by_the_local_lock",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_forged_signer_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_future_created_at_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_naive_timestamp_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_naive_verifying_clock_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_release_missing_a_role_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_symlinked_allowed_signers_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_symlinked_source_archive_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_tampered_manifest_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_valid_bundle_verifies_and_binds_version_identity_digest",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_world_writable_allowed_signers_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_a_wrong_wheel_hash_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_expired_release_is_refused_for_acquisition",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_expired_release_still_verifies_for_retained_runtime",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_extra_unsigned_artifact_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unbounded_lifetime_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unexpected_role_directory_file_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unexpected_top_level_bundle_file_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unknown_role_field_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unknown_role_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unknown_top_level_field_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unknown_validation_mode_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unsigned_bundle_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_expiry_before_creation_is_refused",
+        "tests/test_gate0.py::TestReleaseVerification::test_non_finite_constants_are_rejected",
+        "tests/test_gate0.py::TestReleaseVerification::test_noncanonical_json_is_rejected",
+        "tests/test_gate0.py::TestReleaseVerification::test_replay_semantics"
+      ]
+    },
+    {
+      "id": "G0-REL-INSTALL",
+      "source": "PRD 6 release invariants",
+      "statement": "A signed whole-node release installs exactly the three roles, offline, with no network dependency resolution, and persists provenance.",
+      "tests": [
+        "tests/test_gate0.py::TestChannelDelivery::test_a_plaintext_remote_channel_is_refused",
+        "tests/test_gate0.py::TestChannelDelivery::test_a_tampered_channel_manifest_is_refused_before_download",
+        "tests/test_gate0.py::TestChannelDelivery::test_channel_fetch_verifies_and_installs",
+        "tests/test_gate0.py::TestInstallTransaction::test_a_signed_release_installs_all_three_roles_and_persists_provenance"
+      ]
+    },
+    {
+      "id": "G0-REL-EXPIRY",
+      "source": "PRD 6 release invariants",
+      "statement": "Signed-bundle expiry is an installation and update window, not a runtime kill switch: an installed release stays runnable while its signature, retained authorization, replay floor, filesystem and revocation state still verify.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_expired_installed_release_remains_valid_but_cannot_be_newly_activated",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_expired_release_is_refused_for_acquisition",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_expired_release_still_verifies_for_retained_runtime",
+        "tests/test_gate0.py::TestReleaseVerification::test_an_unknown_validation_mode_is_refused"
+      ]
+    },
+    {
+      "id": "G0-REL-FLOOR",
+      "source": "PRD 6 release invariants",
+      "statement": "A missing or corrupt replay floor fails closed, and the highest externally accepted release version never decreases.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_the_durable_floor_survives_a_destroyed_pointer",
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_missing_pointer_and_floor_with_retained_state_is_not_fresh"
+      ]
+    },
+    {
+      "id": "G0-REL-ROLLBACK",
+      "source": "PRD 6 release invariants",
+      "statement": "A prior group is restored only after independent full verification, and offline rollback requires cached signed revocation state inside its freshness window.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_offline_rollback_refuses_stale_revocation_state",
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_invalid_nested_prior_is_neither_written_nor_started"
+      ]
+    },
+    {
+      "id": "G0-REL-REVOCATION",
+      "source": "PRD 6 trust authority invariants",
+      "statement": "Revocation state is signed, versioned, expiring and freshness checked, and a separate authority from the release signer.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_a_revoked_release_signer_blocks_restart_offline",
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_stale_revocation_knowledge_is_reported_explicitly"
+      ]
+    },
+    {
+      "id": "D-1.1",
+      "source": "Directive 8.1",
+      "statement": "Verified runtime state is a private, frozen, slotted value with immutable nested maps.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_verified_group_is_private_frozen_and_role_map_is_immutable"
+      ]
+    },
+    {
+      "id": "D-1.2",
+      "source": "Directive 8.2",
+      "statement": "A generation tampered after a first successful read is not trusted by a cache.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_generation_tamper_after_first_state_is_not_cached"
+      ]
+    },
+    {
+      "id": "D-1.3",
+      "source": "Directive 8.3",
+      "statement": "A retained release tampered after a first successful read is not trusted by a cache.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_retained_release_tamper_after_first_state_is_not_cached"
+      ]
+    },
+    {
+      "id": "D-1.4",
+      "source": "Directive 8.4",
+      "statement": "A stat-preserving pointer rewrite is not trusted by a cache.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_stat_preserving_pointer_rewrite_is_not_cached"
+      ]
+    },
+    {
+      "id": "D-1.5",
+      "source": "Directive 8.5",
+      "statement": "State's interpreter path comes from the verified role, not a second pointer read.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_state_python_path_comes_from_verified_role_not_second_pointer_read"
+      ]
+    },
+    {
+      "id": "D-1.6",
+      "source": "Directive 8.6",
+      "statement": "A pointer swap after verification starts no process on `start`.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_start_pointer_swap_after_verify_starts_no_process"
+      ]
+    },
+    {
+      "id": "D-1.7",
+      "source": "Directive 8.7",
+      "statement": "A generation tampered after qualification starts no process on `start`.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_start_generation_tamper_after_qualification_starts_no_process"
+      ]
+    },
+    {
+      "id": "D-1.8",
+      "source": "Directive 8.8",
+      "statement": "A pointer swap after verification runs no engine on `test`.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_test_pointer_swap_after_verify_runs_no_engine"
+      ]
+    },
+    {
+      "id": "D-1.9",
+      "source": "Directive 8.9",
+      "statement": "A generation tampered after qualification runs no engine on `test`.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_test_generation_tamper_after_qualification_runs_no_engine"
+      ]
+    },
+    {
+      "id": "D-1.10",
+      "source": "Directive 8.10",
+      "statement": "Status verifies one group per command and never mixes role generations.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_status_verifies_one_group_and_never_mixes_role_generations"
+      ]
+    },
+    {
+      "id": "D-1.11",
+      "source": "Directive 8.11",
+      "statement": "The shared runtime guard blocks a concurrent activation until the operation exits.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_shared_runtime_guard_blocks_concurrent_activation_until_process_exit"
+      ]
+    },
+    {
+      "id": "D-1.12",
+      "source": "Directive 8.12",
+      "statement": "The supervisor receives a verified group, not arbitrary generation identifiers.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_supervisor_receives_verified_group_not_generation_ids"
+      ]
+    },
+    {
+      "id": "D-2.13",
+      "source": "Directive 8.13",
+      "statement": "An invalid nested prior is neither written nor started.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_invalid_nested_prior_is_neither_written_nor_started"
+      ]
+    },
+    {
+      "id": "D-2.14",
+      "source": "Directive 8.14",
+      "statement": "A valid prior is independently verified before restart.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_valid_prior_is_independently_verified_before_restart"
+      ]
+    },
+    {
+      "id": "D-2.15",
+      "source": "Directive 8.15",
+      "statement": "Recovery never mixes pending and prior generations.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_recovery_pending_and_prior_cannot_mix_generations"
+      ]
+    },
+    {
+      "id": "D-2.16",
+      "source": "Directive 8.16",
+      "statement": "A floor that already names pending never rolls back below the floor.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_floor_raised_pending_never_rolls_back_below_floor"
+      ]
+    },
+    {
+      "id": "G0-REL-LEDGER",
+      "source": "PRD 6 release invariants",
+      "statement": "The retained rollback authorization ledger is separate from the external release floor and appends an auditable rollback record.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_offline_rollback_appends_an_auditable_authorization_record"
+      ]
+    },
+    {
+      "id": "D-2.17",
+      "source": "Directive 8.17",
+      "statement": "A supervisor restart failure makes recovery fail.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_supervisor_restart_failure_makes_recovery_fail"
+      ]
+    },
+    {
+      "id": "D-2.18",
+      "source": "Directive 8.18",
+      "statement": "Update refuses an existing unverified active group.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_update_refuses_an_existing_unverified_active_group"
+      ]
+    },
+    {
+      "id": "D-4.19",
+      "source": "Directive 8.19",
+      "statement": "The floor requires an exact schema, exact types and a lowercase hex digest.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_floor_requires_exact_schema_types_and_hex_digest"
+      ]
+    },
+    {
+      "id": "D-4.20",
+      "source": "Directive 8.20",
+      "statement": "Same version with a different digest cannot replace the floor, and corrupt state is never repaired by overwrite.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_same_version_different_digest_cannot_replace_floor"
+      ]
+    },
+    {
+      "id": "D-4.21",
+      "source": "Directive 8.21",
+      "statement": "The committed active pointer exactly equals the floor.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_active_pointer_must_exactly_equal_floor"
+      ]
+    },
+    {
+      "id": "D-4.22",
+      "source": "Directive 8.22",
+      "statement": "A missing pointer and floor with retained state is not fresh.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_missing_pointer_and_floor_with_retained_state_is_not_fresh"
+      ]
+    },
+    {
+      "id": "D-4.23",
+      "source": "Directive 8.23",
+      "statement": "The pending/floor/active crash matrix preserves monotonicity.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_crash_matrix_pending_floor_active_preserves_monotonicity"
+      ]
+    },
+    {
+      "id": "D-4.24",
+      "source": "Directive 8.24",
+      "statement": "A parallel update and recovery leave one consistent floor and pointer.",
+      "tests": [
+        "tests/test_gate0.py::TestRecoveryAndFloor::test_parallel_update_and_recover_leave_one_consistent_floor_and_pointer"
+      ]
+    },
+    {
+      "id": "D-3.25",
+      "source": "Directive 8.25",
+      "statement": "An expired installed release remains valid but cannot be newly activated.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_expired_installed_release_remains_valid_but_cannot_be_newly_activated"
+      ]
+    },
+    {
+      "id": "D-3.26",
+      "source": "Directive 8.26",
+      "statement": "A floor-committed pending release recovers after manifest expiry.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_floor_committed_pending_recovers_after_manifest_expiry"
+      ]
+    },
+    {
+      "id": "D-3.27",
+      "source": "Directive 8.27",
+      "statement": "An uncommitted expired pending release restores only a verified prior.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_uncommitted_expired_pending_restores_only_verified_prior"
+      ]
+    },
+    {
+      "id": "D-5.28",
+      "source": "Directive 8.28",
+      "statement": "Install requires a verified cached revocation snapshot.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_install_requires_verified_cached_revocation_snapshot"
+      ]
+    },
+    {
+      "id": "D-5.29",
+      "source": "Directive 8.29",
+      "statement": "An invalid or older revocation snapshot preserves the last known good cache.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_invalid_or_older_revocation_snapshot_preserves_last_good_cache"
+      ]
+    },
+    {
+      "id": "D-5.30",
+      "source": "Directive 8.30",
+      "statement": "A revoked active digest blocks restart, offline.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_revoked_active_digest_blocks_restart_offline"
+      ]
+    },
+    {
+      "id": "D-5.31",
+      "source": "Directive 8.31",
+      "statement": "A channel outage uses the last known good revocation cache.",
+      "tests": [
+        "tests/test_gate0.py::TestExpiryAndRevocation::test_channel_outage_uses_last_good_revocation_cache"
+      ]
+    },
+    {
+      "id": "D-6.32",
+      "source": "Directive 8.32",
+      "statement": "A regular-file interpreter replacement with a fully recomputed receipt still fails.",
+      "tests": [
+        "tests/test_gate0.py::TestReceiptBinding::test_regular_interpreter_replacement_with_forged_receipt_fails"
+      ]
+    },
+    {
+      "id": "D-6.33",
+      "source": "Directive 8.33",
+      "statement": "Changed source with a recomputed local manifest still fails the signed source hash.",
+      "tests": [
+        "tests/test_gate0.py::TestReceiptBinding::test_changed_source_with_recomputed_local_manifest_fails_signed_source_hash"
+      ]
+    },
+    {
+      "id": "D-6.34",
+      "source": "Directive 8.34",
+      "statement": "Receipt paths, types and timestamp are strict.",
+      "tests": [
+        "tests/test_gate0.py::TestReceiptBinding::test_receipt_paths_types_and_timestamp_are_strict"
+      ]
+    },
+    {
+      "id": "D-6.35",
+      "source": "Directive 8.35",
+      "statement": "Malformed nested venv_python_stat is a controlled refusal, not an exception.",
+      "tests": [
+        "tests/test_gate0.py::TestReceiptBinding::test_malformed_venv_python_stat_refuses_without_exception"
+      ]
+    },
+    {
+      "id": "D-6.36",
+      "source": "Directive 8.36",
+      "statement": "A receipt write failure leaves no generation or pointer.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_receipt_write_failure_leaves_no_generation_or_pointer"
+      ]
+    },
+    {
+      "id": "D-6.37",
+      "source": "Directive 8.37",
+      "statement": "A cached success does not survive receipt, tree or signature mutation.",
+      "tests": [
+        "tests/test_gate0.py::TestReceiptBinding::test_cached_success_does_not_survive_receipt_tree_or_signature_mutation"
+      ]
+    },
+    {
+      "id": "D-6.38",
+      "source": "Directive 8.38",
+      "statement": "The runtime executes only paths from the verified group snapshot.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifiedRuntimeBinding::test_runtime_executes_only_paths_from_the_verified_group_snapshot"
+      ]
+    },
+    {
+      "id": "G0-REAL-ADAPTER",
+      "source": "PRD 7 / Directive 1.6",
+      "statement": "Engine executable, source, venv, receipt and configuration paths come from the bound VerifiedRole, proven against the repository's real adapters bound to a real verified generation, including that argv never carries a secret.",
+      "tests": [
+        "tests/test_gate0.py::TestRealAdapterBinding::test_every_adapter_binary_resolves_inside_its_own_verified_generation",
+        "tests/test_gate0.py::TestRealAdapterBinding::test_operate_argv_and_env_come_from_the_verified_generation_and_carry_no_secret",
+        "tests/test_gate0.py::TestRealAdapterBinding::test_the_validator_engine_config_comes_from_the_verified_source_tree"
+      ]
+    },
+    {
+      "id": "RT-1-ENV",
+      "source": "Runtime follow-up 1",
+      "statement": "One central minimal signed-child environment builder, with inheritance an explicit choice for run, probe and stream. Hostile PYTHONPATH, preload, proxy, virtualenv, cloud credential and token variables cross no install, active-verification, local-test or long-running start path.",
+      "tests": [
+        "tests/test_gate0.py::TestInheritedEnvironmentAttack::test_a_hostile_parent_environment_never_crosses_into_a_signed_engine_check",
+        "tests/test_gate0.py::TestSignedChildEnvironment::test_active_verification_runs_its_probes_with_nothing_inherited",
+        "tests/test_gate0.py::TestSignedChildEnvironment::test_every_subprocess_call_site_states_its_inheritance_explicitly",
+        "tests/test_gate0.py::TestSignedChildEnvironment::test_the_local_test_path_runs_the_engine_with_nothing_inherited",
+        "tests/test_gate0.py::TestSignedChildEnvironment::test_the_long_running_start_path_runs_the_engine_with_nothing_inherited"
+      ]
+    },
+    {
+      "id": "RT-2-OWNERSHIP",
+      "source": "Runtime follow-up 2",
+      "statement": "Durable child ownership \u2014 child pid, process group, kernel start identity, effective uid and verified generation \u2014 is persisted before start is reported, validated before the stored process group is signalled, and stop waits until every group member is gone. Parent crash, orphan child, PID reuse, duplicate start and process-group cleanup are proven against production proc and state.",
+      "tests": [
+        "tests/test_gate0.py::TestChildOwnership::test_a_duplicate_start_is_refused_while_the_child_lives",
+        "tests/test_gate0.py::TestChildOwnership::test_a_killed_parent_does_not_permit_a_second_start",
+        "tests/test_gate0.py::TestChildOwnership::test_ownership_records_the_child_group_and_kernel_start_identity",
+        "tests/test_gate0.py::TestChildOwnership::test_pid_reuse_cannot_resurrect_a_dead_claim",
+        "tests/test_gate0.py::TestChildOwnership::test_stop_refuses_to_signal_a_group_it_cannot_prove_it_owns",
+        "tests/test_gate0.py::TestChildOwnership::test_stop_signals_the_recorded_group_and_waits_for_every_member"
+      ]
+    },
+    {
+      "id": "RT-3-VALIDATOR-CONFIG",
+      "source": "Runtime follow-up 3",
+      "statement": "cathedral config set validator holds a verified lease, binds the adapter to its verified role, renders and parses the complete result, verifies every required projected field, and commits both files atomically with no partial-success state.",
+      "tests": [
+        "tests/test_gate0.py::TestValidatorConfigProjection::test_a_projection_that_would_not_parse_is_refused_before_anything_is_written",
+        "tests/test_gate0.py::TestValidatorConfigProjection::test_config_set_validator_refuses_when_no_verified_generation_exists",
+        "tests/test_gate0.py::TestValidatorConfigProjection::test_the_derived_configuration_is_written_atomically_and_owner_only",
+        "tests/test_gate0.py::TestValidatorConfigProjection::test_the_projection_is_parsed_and_its_required_fields_verified"
+      ]
+    },
+    {
+      "id": "RT-4-PUBLISHER-FENCE",
+      "source": "Runtime follow-up 4 / PRD 4",
+      "statement": "The publisher fence is acquired before the validator child starts, keyed by network, netuid and validator hotkey, held until the owned process group is proven gone; two homes with the same publisher identity cannot run concurrently, and the broadcast refusal offers no escape around the node.",
+      "tests": [
+        "tests/test_gate0.py::TestPublisherFence::test_the_broadcast_refusal_offers_no_way_around_the_node",
+        "tests/test_gate0.py::TestPublisherFence::test_the_fence_refuses_a_symlinked_or_foreign_fence_file",
+        "tests/test_gate0.py::TestPublisherFence::test_two_homes_with_the_same_publisher_identity_cannot_both_hold_it"
+      ]
+    },
+    {
+      "id": "RT-6-ROLLBACK-WITNESS",
+      "source": "Runtime follow-up 6",
+      "statement": "A prior group that verifies but fails restart or readiness leaves the interrupted transaction recorded, so recovery is still required and no later run reports nothing to recover; the update command does not claim the prior release was kept.",
+      "tests": [
+        "tests/test_gate0.py::TestRollbackWitness::test_a_failed_prior_restart_leaves_recovery_still_required",
+        "tests/test_gate0.py::TestRollbackWitness::test_update_does_not_claim_the_prior_release_was_kept_when_recovery_is_pending"
+      ]
+    },
+    {
+      "id": "RT-7-LOCKS",
+      "source": "Independent follow-up runtime 7",
+      "statement": "The lifecycle lock and every durable security read refuse symlinks, wrong file types, foreign owners, unsafe modes, hard links and replacement during acquisition.",
+      "tests": [
+        "tests/test_gate0.py::TestLifecycleLockHardening::test_replacing_the_lock_file_during_the_wait_is_detected",
+        "tests/test_gate0.py::TestLifecycleLockHardening::test_the_lifecycle_lock_refuses_symlink_type_owner_and_mode_attacks",
+        "tests/test_gate0.py::TestSecureLockAndReadHardening::test_a_group_or_world_writable_lifecycle_lock_is_refused",
+        "tests/test_gate0.py::TestSecureLockAndReadHardening::test_a_hard_linked_lifecycle_lock_is_refused",
+        "tests/test_gate0.py::TestSecureLockAndReadHardening::test_a_lock_replaced_between_open_and_acquire_is_refused",
+        "tests/test_gate0.py::TestSecureLockAndReadHardening::test_a_non_regular_lifecycle_lock_is_refused",
+        "tests/test_gate0.py::TestSecureLockAndReadHardening::test_a_symlinked_lifecycle_lock_is_refused",
+        "tests/test_gate0.py::TestSecureLockAndReadHardening::test_the_shared_and_exclusive_forms_exclude_each_other"
+      ]
+    },
+    {
+      "id": "RT-REVOCATION",
+      "source": "Independent follow-up runtime 1-3",
+      "statement": "The revocation cache is one atomically replaced container, a durable monotonic sequence floor refuses a restored older cache, the state and its lock refuse unsafe files, and a stale snapshot refuses acquisition and rollback while still serving retained runtime.",
+      "tests": [
+        "tests/test_gate0.py::TestAcquisitionFreshness::test_a_revoked_signer_is_refused_before_any_candidate_code_runs",
+        "tests/test_gate0.py::TestAcquisitionFreshness::test_a_stale_snapshot_does_not_authorize_an_acquisition",
+        "tests/test_gate0.py::TestAcquisitionFreshness::test_a_stale_snapshot_still_permits_retained_runtime_but_not_rollback",
+        "tests/test_gate0.py::TestRevocationCacheAndFloor::test_a_crash_between_the_cache_and_the_floor_leaves_a_usable_pair",
+        "tests/test_gate0.py::TestRevocationCacheAndFloor::test_a_rolled_back_revocation_cache_is_refused_by_the_sequence_floor",
+        "tests/test_gate0.py::TestRevocationCacheAndFloor::test_concurrent_revocation_retention_is_serialised",
+        "tests/test_gate0.py::TestRevocationCacheAndFloor::test_hostile_revocation_state_files_are_refused",
+        "tests/test_gate0.py::TestRevocationCacheAndFloor::test_the_snapshot_and_signature_are_replaced_in_one_step",
+        "tests/test_gate0.py::TestRevocationTransaction::test_a_revoked_signer_is_refused_before_any_candidate_code_runs",
+        "tests/test_gate0.py::TestRevocationTransaction::test_a_stale_snapshot_blocks_a_new_acquisition_end_to_end",
+        "tests/test_gate0.py::TestRevocationTransaction::test_freshness_is_policy_acquisition_and_rollback_refuse_stale_runtime_does_not",
+        "tests/test_gate0.py::TestRevocationTransaction::test_revocation_state_and_its_lock_refuse_symlinks_types_owners_and_modes",
+        "tests/test_gate0.py::TestRevocationTransaction::test_the_cache_is_one_document_so_no_crash_can_split_snapshot_from_signature",
+        "tests/test_gate0.py::TestRevocationTransaction::test_the_durable_floor_refuses_a_rolled_back_cache"
+      ]
+    },
+    {
+      "id": "RT-LEASE",
+      "source": "Independent follow-up runtime 6",
+      "statement": "Reporting commands hold the verified lifecycle lease while they run installed code; uninstall never authorizes deletion from a lenient pointer read, takes the lifecycle lock, and cleanup does not report success after uninstall refuses.",
+      "tests": [
+        "tests/test_gate0.py::TestFailureLeavesACleanRetry::test_a_failed_floor_commit_leaves_a_fresh_node_that_can_retry",
+        "tests/test_gate0.py::TestFailureLeavesACleanRetry::test_cleanup_does_not_report_success_when_an_engine_could_not_be_removed",
+        "tests/test_gate0.py::TestFailureLeavesACleanRetry::test_uninstall_is_serialised_by_the_lifecycle_lock",
+        "tests/test_gate0.py::TestFailureLeavesACleanRetry::test_uninstall_refuses_a_referenced_or_running_role_and_never_asks_the_pointer_leniently",
+        "tests/test_gate0.py::TestLeaseIsNotEscaped::test_a_failed_floor_commit_leaves_a_fresh_node_that_can_retry",
+        "tests/test_gate0.py::TestLeaseIsNotEscaped::test_a_failed_pointer_write_leaves_a_fresh_node_that_can_retry",
+        "tests/test_gate0.py::TestLeaseIsNotEscaped::test_the_reporting_view_holds_the_shared_lease_for_the_whole_body",
+        "tests/test_gate0.py::TestLeaseIsNotEscaped::test_uninstall_refuses_a_referenced_role_and_deletes_nothing",
+        "tests/test_gate0.py::TestLeaseIsNotEscaped::test_uninstall_refuses_while_a_transaction_holds_the_lifecycle_lock"
+      ]
+    },
+    {
+      "id": "RT-READINESS",
+      "source": "PRD 8 matrix 9 / Independent follow-up runtime 5",
+      "statement": "Wrong endpoint, readiness timeout, hanging server, stale PID, process-group cleanup and idempotent restart, proven against processes that really run.",
+      "tests": [
+        "tests/test_gate0.py::TestReadinessAndLiveness::test_a_hanging_server_fails_readiness_rather_than_blocking_the_transaction",
+        "tests/test_gate0.py::TestReadinessAndLiveness::test_a_server_on_the_wrong_endpoint_fails_readiness_and_rolls_back",
+        "tests/test_gate0.py::TestReadinessAndLiveness::test_a_server_that_never_binds_fails_the_readiness_deadline",
+        "tests/test_gate0.py::TestReadinessAndLiveness::test_a_stale_pid_is_never_accepted_as_a_running_role",
+        "tests/test_gate0.py::TestReadinessAndLiveness::test_stop_and_restart_are_idempotent",
+        "tests/test_gate0.py::TestReadinessAndLiveness::test_stop_terminates_the_whole_process_group_not_only_the_parent"
+      ]
+    },
+    {
+      "id": "RT-ROLLBACK-TERMINATION",
+      "source": "Independent follow-up runtime 4-5",
+      "statement": "Rollback proves termination of the outgoing process group before publishing or clearing a pointer, returns a failed rollback to the caller, deletes nothing a process may still execute, and a failed retention leaves a fresh node that can retry.",
+      "tests": [
+        "tests/test_gate0.py::TestRollbackTermination::test_a_failed_retention_leaves_a_fresh_node_that_can_retry",
+        "tests/test_gate0.py::TestRollbackTermination::test_rollback_refuses_to_publish_or_delete_while_a_process_may_be_running"
+      ]
+    },
+    {
+      "id": "RT-UPDATE-CHAIN",
+      "source": "Independent follow-up runtime 8",
+      "statement": "Repeated signed v1 to v2 to v3 update with controlled restart, crash recovery and rollback, retaining exactly one prior generation per role throughout.",
+      "tests": [
+        "tests/test_gate0.py::TestRepeatedUpdateCycle::test_repeated_v1_v2_v3_update_restart_crash_recovery_and_rollback"
+      ]
+    },
+    {
+      "id": "RT-HARNESS",
+      "source": "Independent follow-up harness 1-6",
+      "statement": "The acceptance harness refuses every narrowing option, every pytest environment mutation, an altered target set and direct node selection; it validates the manifest as a document; and the runner scripts show exactly what they run.",
+      "tests": [
+        "tests/test_contract.py::TestGateHarnessCannotBeNarrowed::test_a_single_node_of_the_gate12_file_is_not_a_gate12_result",
+        "tests/test_contract.py::TestGateHarnessCannotBeNarrowed::test_gate0_is_not_claimed_for_an_altered_target_set",
+        "tests/test_contract.py::TestGateHarnessCannotBeNarrowed::test_gate0_refuses_a_pytest_environment_that_rewrites_the_invocation",
+        "tests/test_contract.py::TestGateHarnessCannotBeNarrowed::test_gate0_refuses_every_narrowing_option",
+        "tests/test_contract.py::TestGateHarnessCannotBeNarrowed::test_gate12_refuses_narrowing_and_requires_its_exact_node_set",
+        "tests/test_contract.py::TestGateHarnessCannotBeNarrowed::test_the_gate0_runner_script_shows_exactly_what_it_runs",
+        "tests/test_contract.py::TestGateHarnessCannotBeNarrowed::test_the_gate12_runner_passes_its_release_argument_to_cathedral_not_pytest",
+        "tests/test_contract.py::TestGateManifestSemantics::test_every_way_the_manifest_can_be_wrong_is_caught",
+        "tests/test_contract.py::TestGateManifestSemantics::test_the_checked_in_manifest_is_valid",
+        "tests/test_contract.py::TestGateManifestSemantics::test_the_generator_hashes_the_real_controlling_documents"
+      ]
+    },
+    {
+      "id": "CE-1-REVOCATION-PARTIAL-COMMIT",
+      "source": "Atomicity counterexamples 1",
+      "statement": "A crash between the revocation cache write and the floor write leaves the cache ahead of the floor. An identical retry of the higher sequence heals the floor rather than being rejected as a digest conflict against the lower one; a different digest at that sequence stays rejected; a restored older cache is never readmitted; and all of it holds across fresh interpreters.",
+      "tests": [
+        "tests/test_gate0.py::TestRevocationPartialCommitRecovery::test_a_crash_between_cache_and_floor_heals_on_retry_and_never_readmits_the_old_sequence",
+        "tests/test_gate0.py::TestRevocationPartialCommitRecovery::test_a_floor_and_cache_that_disagree_at_the_highest_sequence_fail_closed",
+        "tests/test_gate0.py::TestRevocationPartialCommitRecovery::test_healing_only_ever_raises_the_floor"
+      ]
+    },
+    {
+      "id": "CE-2-ORPHANED-PROCESS-GROUP",
+      "source": "Atomicity counterexamples 2",
+      "statement": "A launcher dies while a descendant of the recorded group leader survives. Ownership is the process group, so install pruning and uninstall both refuse to delete the generation until the whole owned group is proven stopped; an ownership publication failure after spawn terminates the group before returning; a malformed record fails closed; and a boot identity stops a pre-reboot record from authorising signalling or deletion.",
+      "tests": [
+        "tests/test_gate0.py::TestOrphanedProcessGroupBlocksDeletion::test_a_live_descendant_of_a_dead_leader_still_owns_the_generation",
+        "tests/test_gate0.py::TestOrphanedProcessGroupBlocksDeletion::test_a_malformed_ownership_record_fails_closed_against_deletion",
+        "tests/test_gate0.py::TestOrphanedProcessGroupBlocksDeletion::test_a_pre_reboot_record_never_authorises_signalling_or_deletion",
+        "tests/test_gate0.py::TestOrphanedProcessGroupBlocksDeletion::test_an_ownership_publication_failure_terminates_the_group_before_returning",
+        "tests/test_gate0.py::TestOrphanedProcessGroupBlocksDeletion::test_install_refuses_to_proceed_and_prunes_nothing_while_a_descendant_lives",
+        "tests/test_gate0.py::TestOrphanedProcessGroupBlocksDeletion::test_releasing_the_role_lock_keeps_the_record_while_descendants_live",
+        "tests/test_gate0.py::TestOrphanedProcessGroupBlocksDeletion::test_uninstall_refuses_while_a_descendant_of_a_dead_leader_lives"
+      ]
+    },
+    {
+      "id": "G0-CLI-ENVELOPE",
+      "source": "PRD 5",
+      "statement": "Every command returns one versioned machine envelope with a stable exit code, and human output is rendered from that same envelope.",
+      "tests": [
+        "tests/test_contract.py::TestEarlyFailures::test_a_compatible_minor_is_accepted",
+        "tests/test_contract.py::TestEarlyFailures::test_bad_role_returns_an_envelope_with_a_documented_code",
+        "tests/test_contract.py::TestEarlyFailures::test_early_failures_still_put_json_on_stdout",
+        "tests/test_contract.py::TestEarlyFailures::test_no_argparse_exit_code_escapes",
+        "tests/test_contract.py::TestEarlyFailures::test_protocol_mismatch_is_an_envelope_not_a_bare_message",
+        "tests/test_contract.py::TestEarlyFailures::test_unknown_command_returns_an_envelope",
+        "tests/test_contract.py::TestEnvelopeShape::test_every_command_emits_a_complete_envelope",
+        "tests/test_contract.py::TestEnvelopeShape::test_exit_code_matches_the_envelope",
+        "tests/test_contract.py::TestEnvelopeShape::test_human_mode_writes_to_stdout_so_redirection_works",
+        "tests/test_contract.py::TestEnvelopeShape::test_json_mode_keeps_stderr_clean",
+        "tests/test_contract.py::TestEnvelopeShape::test_next_steps_are_runnable",
+        "tests/test_contract.py::TestEnvelopeShape::test_stdout_is_only_the_result",
+        "tests/test_contract.py::TestErrorContract::test_every_error_names_a_code_and_a_way_forward",
+        "tests/test_contract.py::TestErrorContract::test_exit_codes_are_grouped_as_documented",
+        "tests/test_contract.py::TestErrorContract::test_retryable_classification",
+        "tests/test_contract.py::TestErrorContract::test_unknown_config_field_is_usage_not_a_crash",
+        "tests/test_contract.py::TestErrorContract::test_unknown_run_is_not_found_with_remediation",
+        "tests/test_contract.py::TestExitCodeDocumentation::test_descriptions_are_distinct",
+        "tests/test_contract.py::TestExitCodeDocumentation::test_every_code_has_a_description",
+        "tests/test_contract.py::TestProtocolVersioning::test_compatibility_is_by_major",
+        "tests/test_contract.py::TestProtocolVersioning::test_envelope_serialises_completely"
+      ]
+    },
+    {
+      "id": "G0-CLI-SECRETS",
+      "source": "PRD 5",
+      "statement": "No secret appears in argv, stdout, stderr, logs, receipts, run state, URLs or process metadata.",
+      "tests": [
+        "tests/test_contract.py::TestSecretHandling::test_a_coldkey_is_refused_by_name",
+        "tests/test_contract.py::TestSecretHandling::test_a_secret_is_never_accepted_as_an_argument",
+        "tests/test_contract.py::TestSecretHandling::test_a_secret_is_read_from_stdin_and_never_echoed",
+        "tests/test_contract.py::TestSecretHandling::test_a_secret_reference_field_refuses_a_literal_value",
+        "tests/test_contract.py::TestSecretHandling::test_known_secret_takes_precedence_over_known_public",
+        "tests/test_contract.py::TestSecretHandling::test_listing_secrets_never_reveals_one",
+        "tests/test_contract.py::TestSecretHandling::test_public_exemption_is_narrow_and_never_leaks_an_embedded_credential",
+        "tests/test_contract.py::TestSecretHandling::test_redaction_catches_a_leaked_secret",
+        "tests/test_contract.py::TestSecretHandling::test_redaction_masks_by_key_whatever_the_shape",
+        "tests/test_contract.py::TestSecretHandling::test_the_secret_file_is_owner_only",
+        "tests/test_contract.py::TestSecretsNeverInHumanOutput::test_control_characters_are_stripped_from_every_output",
+        "tests/test_contract.py::TestSecretsNeverInHumanOutput::test_embedded_credential_is_masked_in_all_output_paths",
+        "tests/test_contract.py::TestSecretsNeverInHumanOutput::test_remediation_docs_and_next_description_are_redacted_in_both_paths",
+        "tests/test_contract.py::TestSecretsNeverInHumanOutput::test_secret_in_a_mapping_key_or_opaque_value_is_masked",
+        "tests/test_contract.py::TestSecretsNeverInHumanOutput::test_untrusted_sgr_is_neutralized_before_styling"
+      ]
+    },
+    {
+      "id": "G0-CLI-IDEMPOTENT",
+      "source": "PRD 5",
+      "statement": "Commands are idempotent and non-interactive, and a required confirmation is reported rather than prompted.",
+      "tests": [
+        "tests/test_contract.py::TestIdempotency::test_config_set_is_idempotent",
+        "tests/test_contract.py::TestIdempotency::test_dry_run_changes_nothing",
+        "tests/test_contract.py::TestIdempotency::test_stop_when_nothing_runs_is_success_not_failure",
+        "tests/test_contract.py::TestNonInteractive::test_a_required_confirmation_is_reported_not_prompted",
+        "tests/test_contract.py::TestNonInteractive::test_chain_writes_are_refused_permanently_not_as_a_missing_flag",
+        "tests/test_contract.py::TestNonInteractive::test_confirmation_remedy_preserves_the_all_flag",
+        "tests/test_contract.py::TestNonInteractive::test_confirmation_remedy_preserves_the_operation",
+        "tests/test_contract.py::TestNonInteractive::test_no_command_blocks_on_a_prompt"
+      ]
+    },
+    {
+      "id": "G0-CLI-ENGINES",
+      "source": "PRD 4",
+      "statement": "Every role resolves to an engine adapter with a complete, honest capability contract, and the legacy validator is never pinned.",
+      "tests": [
+        "tests/test_contract.py::TestEngineContract::test_an_unbound_adapter_refuses_to_resolve_an_executable_path",
+        "tests/test_contract.py::TestEngineContract::test_capabilities_are_shaped_consistently",
+        "tests/test_contract.py::TestEngineContract::test_every_role_resolves_to_an_engine",
+        "tests/test_contract.py::TestEngineContract::test_explain_has_every_required_key",
+        "tests/test_contract.py::TestEngineContract::test_legacy_cathedral_is_excluded_and_never_pinned",
+        "tests/test_contract.py::TestEngineContract::test_pins_are_full_commit_shas",
+        "tests/test_contract.py::TestEngineContract::test_trusted_repository_parses_the_origin_not_a_substring",
+        "tests/test_contract.py::TestGeneratedBrief::test_brief_never_promises_an_unavailable_capability",
+        "tests/test_contract.py::TestGeneratedBrief::test_brief_reports_distinct_exit_code_meanings",
+        "tests/test_contract.py::TestGeneratedBrief::test_brief_states_the_coldkey_boundary",
+        "tests/test_contract.py::TestNoRendererFallsBack::test_every_optional_explain_key_is_optional",
+        "tests/test_contract.py::TestNoRendererFallsBack::test_no_command_falls_back_on_a_fresh_node"
+      ]
+    },
+    {
+      "id": "G0-CLI-CONFIG",
+      "source": "PRD 6",
+      "statement": "Owner-controlled configuration cannot be set by an operator, and a configuration value never becomes configuration structure.",
+      "tests": [
+        "tests/test_contract.py::TestConfigInjection::test_a_config_problem_is_not_reported_as_an_internal_error",
+        "tests/test_contract.py::TestConfigInjection::test_a_stored_value_reads_back_exactly",
+        "tests/test_contract.py::TestConfigInjection::test_no_payload_injects_a_key_or_corrupts_the_file",
+        "tests/test_contract.py::TestConfigInjection::test_toml_rendering_escapes_control_characters",
+        "tests/test_contract.py::TestConfigSafety::test_a_valid_hotkey_passes",
+        "tests/test_contract.py::TestConfigSafety::test_burn_is_not_offered_as_an_operator_setting",
+        "tests/test_contract.py::TestConfigSafety::test_forbidden_fields_cannot_be_saved",
+        "tests/test_contract.py::TestConfigSafety::test_hotkey_shape_is_validated",
+        "tests/test_contract.py::TestConfigSafety::test_non_loopback_without_tls_is_refused",
+        "tests/test_contract.py::TestConfigSafety::test_owner_controlled_fields_are_declared",
+        "tests/test_contract.py::TestConfigSafety::test_the_weight_contract_and_signing_key_are_the_operators"
+      ]
+    },
+    {
+      "id": "G0-CLI-STATE",
+      "source": "PRD 5",
+      "statement": "Run state, ordering, locks and damaged state produce a diagnosis, never a crash or a lie.",
+      "tests": [
+        "tests/test_contract.py::TestFailureRecovery::test_a_corrupt_run_record_is_reported_as_missing",
+        "tests/test_contract.py::TestFailureRecovery::test_a_missing_engine_directory_is_reported_not_assumed",
+        "tests/test_contract.py::TestFailureRecovery::test_an_unwritable_home_returns_an_envelope",
+        "tests/test_contract.py::TestFailureRecovery::test_corrupt_event_lines_are_skipped_not_fatal",
+        "tests/test_contract.py::TestLockRecovery::test_a_corrupt_lock_is_never_silently_reclaimed",
+        "tests/test_contract.py::TestLockRecovery::test_a_dead_owners_lock_is_reclaimed",
+        "tests/test_contract.py::TestLockRecovery::test_a_live_lock_is_respected",
+        "tests/test_contract.py::TestLockRecovery::test_reconcile_marks_a_dead_run_interrupted",
+        "tests/test_contract.py::TestProcRobustness::test_launching_a_non_executable_file_is_a_controlled_failure",
+        "tests/test_contract.py::TestProcRobustness::test_run_decodes_non_utf8_without_crashing",
+        "tests/test_contract.py::TestProcRobustness::test_stream_reader_failure_is_reported_as_nonzero",
+        "tests/test_contract.py::TestProcRobustness::test_stream_redacts_before_the_callback",
+        "tests/test_contract.py::TestProcRobustness::test_stream_terminates_a_chatty_child_when_the_reader_dies",
+        "tests/test_contract.py::TestRunOrdering::test_limit_applies_after_sorting",
+        "tests/test_contract.py::TestRunOrdering::test_newest_first_regardless_of_command_prefix"
+      ]
+    },
+    {
+      "id": "G0-CLI-PRESENTATION",
+      "source": "PRD 5",
+      "statement": "Human rendering is derived from the machine envelope, never crashes, and never claims more than was proven.",
+      "tests": [
+        "tests/test_contract.py::TestAsciiStreamDetection::test_ascii_stdout_does_not_crash",
+        "tests/test_contract.py::TestAsciiStreamDetection::test_detection_uses_the_configured_stream_not_stderr",
+        "tests/test_contract.py::TestHonestyOnThePath::test_compute_quickstart_warns_before_it_installs",
+        "tests/test_contract.py::TestHonestyOnThePath::test_every_quickstart_states_what_is_not_yet_true",
+        "tests/test_contract.py::TestHonestyOnThePath::test_no_surface_claims_the_operator_is_earning",
+        "tests/test_contract.py::TestPresentation::test_ascii_fallback_has_no_multibyte_glyphs",
+        "tests/test_contract.py::TestPresentation::test_ascii_fallback_is_pure_ascii_including_dynamic_text",
+        "tests/test_contract.py::TestPresentation::test_ascii_mode_folds_arbitrary_unicode_config_values",
+        "tests/test_contract.py::TestPresentation::test_capabilities_json_has_no_null_capability",
+        "tests/test_contract.py::TestPresentation::test_config_get_returns_the_public_key_not_a_mask",
+        "tests/test_contract.py::TestPresentation::test_confirmation_remedy_is_shell_safe",
+        "tests/test_contract.py::TestPresentation::test_engine_census_is_a_uniform_capability_object",
+        "tests/test_contract.py::TestPresentation::test_label_column_aligns_in_both_themes",
+        "tests/test_contract.py::TestPresentation::test_no_line_exceeds_the_terminal_width",
+        "tests/test_contract.py::TestPresentation::test_public_key_reads_the_same_in_json_and_human",
+        "tests/test_contract.py::TestPresentation::test_readable_without_colour",
+        "tests/test_contract.py::TestPresentation::test_registering_a_public_value_does_not_unmask_real_secrets",
+        "tests/test_contract.py::TestRemediationIsActionable::test_a_placeholder_remediation_is_flagged",
+        "tests/test_contract.py::TestRemediationIsActionable::test_every_remediation_declares_requires_input",
+        "tests/test_contract.py::TestRemediationIsActionable::test_no_remediation_is_the_command_that_just_failed",
+        "tests/test_contract.py::TestRenderingNeverCrashes::test_failures_still_say_what_to_do",
+        "tests/test_contract.py::TestRenderingNeverCrashes::test_json_mode_is_unaffected_by_render_state",
+        "tests/test_contract.py::TestRenderingNeverCrashes::test_no_traceback_reaches_the_terminal"
+      ]
+    },
+    {
+      "id": "G0-CLI-UPDATE",
+      "source": "PRD 6",
+      "statement": "Updates come only from a signed release; an unsigned lockfile update is refused.",
+      "tests": [
+        "tests/test_contract.py::TestUpdateSource::test_an_unsigned_lockfile_update_is_refused",
+        "tests/test_contract.py::TestUpdateSource::test_update_check_reports_without_a_configured_release"
+      ]
+    },
+    {
+      "id": "G0-REV-HEAL",
+      "source": "PRD 8.7 / review",
+      "statement": "A revocation floor that cannot be advanced is a refusal: an unfloored snapshot is never exported, and the older snapshot is never re-admitted.",
+      "tests": [
+        "tests/test_gate0.py::TestRevocationFloorAheadOfCache::test_a_wrong_snapshot_offered_against_a_higher_floor_is_still_refused",
+        "tests/test_gate0.py::TestRevocationFloorAheadOfCache::test_exact_floor_snapshot_repairs_a_restored_older_cache_or_returns_failure",
+        "tests/test_gate0.py::TestRevocationHealFailsClosed::test_a_lock_that_cannot_be_taken_also_fails_closed",
+        "tests/test_gate0.py::TestRevocationHealFailsClosed::test_failed_floor_heal_fails_closed_and_never_readmits_the_old_cache"
+      ]
+    },
+    {
+      "id": "G0-REV-PROVISION",
+      "source": "PRD 8.7 / review",
+      "statement": "Provisioning is the same verified transaction as retention: unverified bytes never become the last known good snapshot, a different digest at the floor sequence is refused, and concurrent provisioning never lowers the floor.",
+      "tests": [
+        "tests/test_gate0.py::TestRevocationProvisioningTransaction::test_concurrent_provisioning_never_lowers_the_revocation_floor",
+        "tests/test_gate0.py::TestRevocationProvisioningTransaction::test_different_equal_sequence_is_refused_before_partial_commit_healing",
+        "tests/test_gate0.py::TestRevocationProvisioningTransaction::test_provisioning_refuses_a_different_digest_at_the_floor_sequence",
+        "tests/test_gate0.py::TestRevocationProvisioningTransaction::test_provisioning_refuses_unverified_bytes"
+      ]
+    },
+    {
+      "id": "G0-REV-OUTAGE",
+      "source": "PRD 8.7 / review",
+      "statement": "A channel outage degrades to the cache only when the durable floor covers it, and a concurrent floor advance never yields a snapshot below the final floor.",
+      "tests": [
+        "tests/test_gate0.py::TestRevocationOutageAndConcurrency::test_an_outage_that_cannot_raise_the_floor_reports_no_usable_state",
+        "tests/test_gate0.py::TestRevocationOutageAndConcurrency::test_channel_outage_with_cache_ahead_of_floor_never_exports_unfloored_state_or_readmits_old_cache",
+        "tests/test_gate0.py::TestRevocationOutageAndConcurrency::test_concurrent_floor_advance_during_heal_never_returns_state_below_final_floor"
+      ]
+    },
+    {
+      "id": "G0-REV-ANCESTOR",
+      "source": "PRD 8.2 / review",
+      "statement": "Security files are refused through a redirected ancestor directory, not only a redirected final component.",
+      "tests": [
+        "tests/test_gate0.py::TestRevocationDirectoryRedirection::test_a_redirected_parent_cannot_readmit_a_refused_snapshot",
+        "tests/test_gate0.py::TestRevocationDirectoryRedirection::test_a_symlinked_engines_directory_is_refused",
+        "tests/test_gate0.py::TestRevocationDirectoryRedirection::test_a_symlinked_revocation_directory_is_refused_by_every_entry_point",
+        "tests/test_gate0.py::TestRevocationDirectoryRedirection::test_the_ownership_ledger_is_refused_through_a_redirected_parent"
+      ]
+    },
+    {
+      "id": "G0-LOCK-IDENTITY",
+      "source": "PRD 8.2 / review",
+      "statement": "A lock file replaced at its name is refused: mutual exclusion may never silently become two holders on two inodes.",
+      "tests": [
+        "tests/test_gate0.py::TestLifecycleLockHardening::test_replacing_the_lock_file_during_the_wait_is_detected"
+      ]
+    },
+    {
+      "id": "G0-OWN-OBSOLETE",
+      "source": "PRD 8.9 / review",
+      "statement": "An ownership record in a shape this node cannot parse is unverifiable, never silently reclaimed, and blocks deletion.",
+      "tests": [
+        "tests/test_gate0.py::TestInstallTransaction::test_an_obsolete_ownership_record_is_not_silently_reclaimed"
+      ]
+    },
+    {
+      "id": "G0-OWN-PROBE",
+      "source": "PRD 8.9 / review",
+      "statement": "A failed process probe is never read as termination: it blocks prune and uninstall and never reports a completed stop.",
+      "tests": [
+        "tests/test_gate0.py::TestOwnershipProbeFailure::test_group_probe_failure_blocks_prune_and_uninstall",
+        "tests/test_gate0.py::TestOwnershipProbeFailure::test_group_probe_failure_never_reports_stop_complete_or_removes_ownership"
+      ]
+    },
+    {
+      "id": "G0-OWN-BOOT",
+      "source": "PRD 8.9 / review",
+      "statement": "An unknown boot identity is unverifiable rather than stale, and a known previous boot is cleared without signalling reused ids.",
+      "tests": [
+        "tests/test_gate0.py::TestOwnershipBootIdentity::test_a_known_previous_boot_is_stale_rather_than_unverifiable",
+        "tests/test_gate0.py::TestOwnershipBootIdentity::test_unavailable_boot_identity_is_unverifiable_and_cannot_be_cleared"
+      ]
+    },
+    {
+      "id": "G0-OWN-REUSE",
+      "source": "PRD 8.9 / review",
+      "statement": "A pid or process group we cannot prove is ours never authorizes a signal or a deletion, including same-second reuse.",
+      "tests": [
+        "tests/test_gate0.py::TestOwnershipPidReuse::test_same_boot_reused_pgid_never_authorizes_signal_or_deletion",
+        "tests/test_gate0.py::TestOwnershipPidReuse::test_start_identity_mismatch_never_becomes_live_owned_from_pgid_membership"
+      ]
+    },
+    {
+      "id": "G0-OWN-LEDGER",
+      "source": "PRD 8.9 / review",
+      "statement": "An append-only launch ledger \u2014 not a command-line scan \u2014 proves that a launch was opened and never closed, through a deleted record, an exec'd descendant, and a spawn crash.",
+      "tests": [
+        "tests/test_gate0.py::TestLaunchLedgerBlocksDeletion::test_a_deleted_record_and_an_untraceable_descendant_still_block_deletion",
+        "tests/test_gate0.py::TestLaunchLedgerBlocksDeletion::test_a_spawn_publication_crash_window_blocks_deletion",
+        "tests/test_gate0.py::TestLaunchLedgerBlocksDeletion::test_an_unreadable_ledger_blocks_deletion",
+        "tests/test_gate0.py::TestLedgerIsADurableWitness::test_a_deleted_ledger_is_not_an_empty_history",
+        "tests/test_gate0.py::TestLedgerIsADurableWitness::test_a_node_that_never_launched_is_not_blocked_by_the_absence",
+        "tests/test_gate0.py::TestLedgerIsADurableWitness::test_a_refused_ledger_stops_the_public_start_before_any_child_exists",
+        "tests/test_gate0.py::TestLedgerIsADurableWitness::test_launch_lease_append_refuses_symlink_hardlink_fifo_and_replaced_inode_before_spawn",
+        "tests/test_gate0.py::TestLedgerIsADurableWitness::test_ledger_compaction_preserves_every_open_lease_and_survives_crash_at_each_commit_boundary"
+      ]
+    },
+    {
+      "id": "G0-OWN-ESCAPE",
+      "source": "PRD 8.9 / review",
+      "statement": "A descendant that leaves its process group leaves an unfinished lease, and only a recorded ending closes one.",
+      "tests": [
+        "tests/test_gate0.py::TestLeaseEscapesTheProcessGroup::test_a_descendant_that_leaves_the_process_group_still_blocks_deletion",
+        "tests/test_gate0.py::TestLeaseEscapesTheProcessGroup::test_only_a_recorded_ending_closes_a_lease"
+      ]
+    },
+    {
+      "id": "G0-OWN-EXCLUSIVE",
+      "source": "PRD 8.9 / review",
+      "statement": "A launch that cannot be durably claimed starts no process, and an open or unreadable lease prevents a second owner.",
+      "tests": [
+        "tests/test_gate0.py::TestLeaseOwnershipIsExclusive::test_an_open_lease_prevents_a_second_owner_even_with_no_role_record",
+        "tests/test_gate0.py::TestLeaseOwnershipIsExclusive::test_an_unreadable_ledger_prevents_a_second_owner",
+        "tests/test_gate0.py::TestLeaseOwnershipIsExclusive::test_begin_spawn_aborts_when_another_launcher_owns_the_record",
+        "tests/test_gate0.py::TestLeaseOwnershipIsExclusive::test_begin_spawn_aborts_when_the_claim_is_gone"
+      ]
+    },
+    {
+      "id": "G0-OWN-IDENTITY",
+      "source": "PRD 8.9 / review",
+      "statement": "Process identity is kernel-grade; leases from a known previous boot retire without signalling, and an unknown boot still fails closed.",
+      "tests": [
+        "tests/test_gate0.py::TestLeaseIdentityAndBoots::test_an_unknown_boot_identity_still_fails_closed",
+        "tests/test_gate0.py::TestLeaseIdentityAndBoots::test_known_prior_boot_lease_is_retired_without_signaling_reused_ids",
+        "tests/test_gate0.py::TestLeaseIdentityAndBoots::test_same_second_pid_and_pgid_reuse_never_authorizes_signal"
+      ]
+    },
+    {
+      "id": "G0-OWN-PUBLIC-STOP",
+      "source": "PRD 8.9 / review",
+      "statement": "The public stop finds the child the ledger names when the role record is missing, and the post-loop exit closes the lease instead of raising.",
+      "tests": [
+        "tests/test_gate0.py::TestPublicStopFindsTheLease::test_public_stop_recovers_verified_owned_lease_when_role_record_is_missing",
+        "tests/test_gate0.py::TestPublicStopFindsTheLease::test_stop_closes_lease_when_group_exits_after_final_poll_without_raising"
+      ]
+    },
+    {
+      "id": "G0-OWN-PUBLIC-CRASH",
+      "source": "PRD 8.9 / review",
+      "statement": "A crash of the public start command blocks public prune and uninstall, records the exact interrupted state, and recovers deterministically.",
+      "tests": [
+        "tests/test_gate0.py::TestPublicStartLauncherCrash::test_a_crashed_public_start_blocks_public_prune_and_uninstall"
+      ]
+    },
+    {
+      "id": "G0-ACT-WITNESS",
+      "source": "PRD 8.7 / review",
+      "statement": "The installer reports what actually happened at each commit boundary, and a retry heals activation witnesses rather than no-opping.",
+      "tests": [
+        "tests/test_gate0.py::TestActivationWitnessReporting::test_activating_journal_failure_reports_pending_recovery_not_unwound",
+        "tests/test_gate0.py::TestActivationWitnessReporting::test_post_commit_journal_failure_reports_committed_state_and_retry_heals_witnesses"
+      ]
+    },
+    {
+      "id": "G0-OWN-DETACHED",
+      "source": "PRD 8.9 / review",
+      "statement": "A descendant that leaves its process group keeps its lease open through the public start, stop and second-start cycle, and a lease that cannot prove its identity or owner is never signalled.",
+      "tests": [
+        "tests/test_gate0.py::TestDetachedDescendantThroughPublicCommands::test_a_detached_child_blocks_stop_deletion_and_a_second_start",
+        "tests/test_gate0.py::TestDetachedDescendantThroughPublicCommands::test_a_lease_from_another_user_is_never_signalled",
+        "tests/test_gate0.py::TestDetachedDescendantThroughPublicCommands::test_a_reused_process_group_is_never_signalled_from_a_lease"
+      ]
+    },
+    {
+      "id": "G0-OWN-INTENT",
+      "source": "PRD 8.9 / review",
+      "statement": "A spawn that was never confirmed is never closed by inference, with or without a role record.",
+      "tests": [
+        "tests/test_gate0.py::TestUnconfirmedSpawnIsNeverClosed::test_an_intent_only_crash_keeps_deletion_blocked_with_no_role_record"
+      ]
+    },
+    {
+      "id": "G0-OWN-LEDGER-LOCK",
+      "source": "PRD 8.9 / review",
+      "statement": "One lock covers appends and compaction, so a concurrent append is never durably written into an unlinked inode.",
+      "tests": [
+        "tests/test_gate0.py::TestLedgerLockIsSingle::test_a_concurrent_append_is_never_lost_to_compaction"
+      ]
+    },
+    {
+      "id": "G0-REV-CHANNEL",
+      "source": "PRD 8.7 / review",
+      "statement": "No channel outcome \u2014 invalid, older, equal-conflict, expired or malformed \u2014 exports a cache ahead of the durable floor or lets the older snapshot back in.",
+      "tests": [
+        "tests/test_gate0.py::TestRevocationChannelOutcomes::test_a_usable_channel_snapshot_still_advances_normally",
+        "tests/test_gate0.py::TestRevocationChannelOutcomes::test_no_channel_outcome_exports_a_cache_ahead_of_the_durable_floor"
+      ]
+    },
+    {
+      "id": "G0-IO-ANCESTOR-RACE",
+      "source": "PRD 8.2 / review",
+      "statement": "A directory replaced while a security file is being locked or written is a refusal, not a lock on a detached inode or a write reported as published.",
+      "tests": [
+        "tests/test_gate0.py::TestAncestorReplacementDuringIO::test_a_holder_whose_directory_is_replaced_never_believes_it_holds_the_lock",
+        "tests/test_gate0.py::TestAncestorReplacementDuringIO::test_a_lock_taken_through_a_replaced_directory_is_refused",
+        "tests/test_gate0.py::TestAncestorReplacementDuringIO::test_a_write_published_into_a_replaced_directory_is_not_reported_as_success"
+      ]
+    },
+    {
+      "id": "G0-EXEC-BINDING",
+      "source": "PRD 8.9 / review",
+      "statement": "Execution is bound to the exact verified inode: a program replaced after revalidation and before exec is detected before start is reported, and nothing from it survives.",
+      "tests": [
+        "tests/test_gate0.py::TestVerifyToExecBinding::test_replacing_the_program_after_revalidation_starts_nothing_that_survives",
+        "tests/test_gate0.py::TestVerifyToExecBinding::test_the_binding_accepts_an_untouched_program"
+      ]
+    },
+    {
+      "id": "G0-COMMIT-TRUTH",
+      "source": "PRD 8.7 / review",
+      "statement": "Outcomes are classified by the durable state on disk, not by which exception was raised: post-publish failures report committed, healing is release-bound, a rollback that could not clear the pointer is not a rollback, and the transaction records are hardened.",
+      "tests": [
+        "tests/test_gate0.py::TestCommittedStateIsReportedNotGuessed::test_a_directory_fsync_failure_after_the_pointer_is_published_reports_committed",
+        "tests/test_gate0.py::TestCommittedStateIsReportedNotGuessed::test_a_fresh_node_rollback_that_cannot_clear_the_pointer_is_not_reported_as_rolled_back",
+        "tests/test_gate0.py::TestCommittedStateIsReportedNotGuessed::test_recovery_reports_committed_state_when_a_post_commit_write_fails",
+        "tests/test_gate0.py::TestCommittedStateIsReportedNotGuessed::test_the_transaction_journals_are_refused_through_hostile_shapes",
+        "tests/test_gate0.py::TestCommittedStateIsReportedNotGuessed::test_witness_healing_is_bound_to_the_release_it_witnesses"
+      ]
+    }
+  ]
+}
