@@ -36,6 +36,28 @@ FORBIDDEN_FIELDS = frozenset(
 )
 
 
+def is_forbidden_secret(name: str) -> bool:
+    """True when `name` names key material Cathedral never accepts.
+
+    Deliberately broader than the exact-match check `save` applies to config
+    FIELDS. A field name is one of ours, drawn from a fixed schema; a SECRET name
+    is whatever the operator types, so an exact match is bypassed by `COLDKEY_1`
+    or `wallet_mnemonic` — which is the shape of the mistake this guard exists to
+    catch.
+
+    Punctuation and case are collapsed before matching, so `MY-COLDKEY`,
+    `coldkey_backup` and `WalletMnemonic` are all refused, while `bearer_token`
+    and `hf_api_key` are accepted.
+
+    It over-refuses on purpose. The cost of a false positive is renaming a
+    secret; the cost of a false negative is a coldkey sitting on disk.
+    """
+    flattened = re.sub(r"[^a-z0-9]+", "", str(name).lower())
+    return any(
+        re.sub(r"[^a-z0-9]+", "", term) in flattened for term in FORBIDDEN_FIELDS
+    )
+
+
 class ConfigError(Exception):
     """Raised with a message written for the operator, not the developer."""
 
@@ -255,12 +277,41 @@ def _to_toml(role: str, values: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+# TOML basic strings may not contain raw control characters. Escaping only the
+# backslash and the quote left a value carrying a newline able to terminate its
+# own line and start a new key -- config injection, and the file did not even
+# parse afterwards (`tomllib.TOMLDecodeError: Illegal character '\n'`). The named
+# escapes are the ones the TOML spec defines; everything else in C0 plus DEL goes
+# out as \uXXXX.
+_TOML_ESCAPES = {
+    "\\": "\\\\",
+    '"': '\\"',
+    "\b": "\\b",
+    "\t": "\\t",
+    "\n": "\\n",
+    "\f": "\\f",
+    "\r": "\\r",
+}
+
+
+def _toml_escape(text: str) -> str:
+    out = []
+    for char in text:
+        if char in _TOML_ESCAPES:
+            out.append(_TOML_ESCAPES[char])
+        elif ord(char) < 0x20 or ord(char) == 0x7F:
+            out.append(f"\\u{ord(char):04X}")
+        else:
+            out.append(char)
+    return "".join(out)
+
+
 def _toml_value(value: Any) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, (int, float)):
         return str(value)
-    return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"') + '"'
+    return '"' + _toml_escape(str(value)) + '"'
 
 
 # --- secrets -------------------------------------------------------------------
