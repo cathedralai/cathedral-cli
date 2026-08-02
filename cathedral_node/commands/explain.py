@@ -36,9 +36,21 @@ def _render(console: Console, data: dict[str, Any], env: Envelope) -> None:
     console.blank()
     console.para(data["what_you_do"], indent=4)
 
-    console.blank()
-    console.rule("how you are scored")
-    console.para(data["how_you_are_scored"], indent=4)
+    # Everything past Engine.EXPLAIN_REQUIRED is optional BY DEFINITION, so it is
+    # read with .get like every other optional section. Indexing this one directly
+    # is what silently dropped `explain validator` into the degraded renderer: a
+    # validator is not scored, it scores, so it supplies `who_sets_the_burn` and no
+    # `how_you_are_scored`. The KeyError was caught upstream and the fallback still
+    # printed something, so nothing looked broken.
+    if data.get("how_you_are_scored"):
+        console.blank()
+        console.rule("how you are scored")
+        console.para(data["how_you_are_scored"], indent=4)
+
+    if data.get("who_sets_the_burn"):
+        console.blank()
+        console.rule("who sets the burn")
+        console.para(data["who_sets_the_burn"], indent=4)
 
     if data.get("what_you_verify"):
         console.blank()

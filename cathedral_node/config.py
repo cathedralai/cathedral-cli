@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from cathedral_node import paths
+from cathedral_node import redact
 from cathedral_node.redact import fingerprint
 
 # A Bittensor SS58 hotkey. We validate shape only — proving ownership is the
@@ -34,6 +35,14 @@ SS58_RE = re.compile(r"^5[1-9A-HJ-NP-Za-km-z]{46,47}$")
 FORBIDDEN_FIELDS = frozenset(
     {"coldkey", "coldkey_mnemonic", "coldkey_seed", "mnemonic", "seed", "private_key", "coldkeypub"}
 )
+
+
+# Cathedral's published weight-policy signing key (key_id "cathedral-weight-policy").
+# Public by design: a validator's control is which key it will accept, so the value
+# has to be readable in both the human and --json views rather than masked.
+SN39_WEIGHT_POLICY_PUBLIC_KEY = "10890a66aa752479cb3b634f366d7bd27c374324d83f88d2d6b69ab066f25e26"
+
+_WEIGHT_POLICY_KEY = re.compile(r"[0-9a-fA-F]{64}")
 
 
 def is_forbidden_secret(name: str) -> bool:
@@ -128,19 +137,29 @@ SCHEMAS: dict[str, tuple[Field, ...]] = {
         Field("interval_secs", "Seconds between ticks.", default=1500),
         Field("provenance", "Audit mode.", default="shadow",
               choices=("off", "shadow", "authority", "full", "thin")),
-        Field("burn_fraction", "Owner-controlled share sent to burn. Preserved across updates.",
-              default=0.10),
-        Field("burn_destination", "Owner-controlled burn destination. Empty means the live subnet owner.",
-              default=""),
-        Field("lane_allocation", "Owner-controlled per-lane allocation. Preserved across updates.",
-              default=""),
+        # Burn and allocation are deliberately ABSENT. They arrive inside the
+        # Cathedral-signed weight vector and from Cathedral-signed burn and
+        # allocation documents; nothing local changes them. Offering them here
+        # would let an operator believe they had changed the economics when
+        # nothing had changed -- the worst kind of setting.
+        #
+        # What an operator genuinely controls is what they will ACCEPT:
+        Field("require_policy",
+              "The weight-policy contract this validator will accept. Finney SN39 "
+              "broadcast requires `validated_supply_v1`.",
+              default="validated_supply_v1"),
+        Field("weight_policy_key",
+              "Public signing key (64 hex chars) whose signed weight vectors you "
+              "will accept. Public by design: read it aloud, check it against the "
+              "published key.",
+              default=SN39_WEIGHT_POLICY_PUBLIC_KEY),
     ),
 }
 
 # Owner policy an update must never silently change. `cathedral update` diffs
 # these and refuses to proceed if a new default would move one.
 OWNER_CONTROLLED = {
-    "validator": ("burn_fraction", "burn_destination", "lane_allocation", "wallet_name", "wallet_hotkey"),
+    "validator": ("wallet_name", "wallet_hotkey", "require_policy", "weight_policy_key"),
 }
 
 
@@ -167,6 +186,13 @@ def load(role: str) -> dict[str, Any]:
                 f"{paths.relative_to_home(path)} is not valid TOML: {exc}",
                 remedy=f"cathedral config reset {role}",
             ) from exc
+    # The weight-policy key is declared public: register the literal so the
+    # redaction heuristics never mask it. A masked key would hide the
+    # operator's signing-key control from an agent reading --json, while the
+    # human view showed it in full -- one envelope, two answers.
+    key = values.get("weight_policy_key")
+    if key:
+        redact.register_public_values([key])
     return values
 
 
@@ -227,15 +253,12 @@ def validate(role: str, values: dict[str, Any]) -> list[str]:
             problems.extend(_key_permission_problems(Path(str(key)).expanduser()))
 
     if role == "validator":
-        burn = values.get("burn_fraction")
-        if burn is not None:
-            try:
-                burn_f = float(burn)
-            except (TypeError, ValueError):
-                problems.append("`burn_fraction` must be a number between 0 and 1")
-            else:
-                if not 0.0 <= burn_f <= 1.0:
-                    problems.append(f"`burn_fraction` must be between 0 and 1 (found {burn_f})")
+        key = values.get("weight_policy_key")
+        if key not in (None, "") and not _WEIGHT_POLICY_KEY.fullmatch(str(key)):
+            problems.append(
+                "`weight_policy_key` must be 64 hex characters (an Ed25519 public "
+                f"key); found {len(str(key))} characters"
+            )
         interval = values.get("interval_secs")
         if interval is not None and int(interval) < 60:
             problems.append("`interval_secs` below 60 will be throttled by the chain's write cooldown")
