@@ -5674,9 +5674,13 @@ class TestPublicStartLauncherCrash(Gate0Base):
             "from test_gate0 import _StubEngine\n"
             "class _LongRunning(_StubEngine):\n"
             "    def operate_argv(self, _cfg, *, dry_run=False):\n"
-            # A detached descendant plus a foreground process: killing the launcher
-            # leaves the descendant behind exactly as a real crash would.
-            "        return ['/bin/sh', '-c', 'sleep 90 & sleep 120']\n"
+            # Run through the verified generation's regular-file interpreter, just
+            # like every production adapter runs a verified venv entrypoint. Using
+            # /bin/sh here made the fixture platform-dependent because it is a
+            # symlink on Ubuntu and the runtime correctly refuses symlinked launch
+            # targets with O_NOFOLLOW.
+            "        body = 'import os,time\\nif os.fork() == 0: time.sleep(90)\\ntime.sleep(120)'\n"
+            "        return [str(self.verified.bin('python')), '-c', body]\n"
             "    def operate_env(self, _cfg):\n"
             "        return {}\n"
             "    def child_env(self, _cfg=None):\n"
@@ -6548,7 +6552,11 @@ class TestDetachedDescendantThroughPublicCommands(LeaseCase):
             "from test_gate0 import _StubEngine\n"
             "class _Detaching(_StubEngine):\n"
             "    def operate_argv(self, _cfg, *, dry_run=False):\n"
-            f"        return ['/usr/bin/python3', '-c', {body!r}, "
+            # Keep the fixture inside the same verified-generation boundary as the
+            # production adapters. /usr/bin/python3 is normally a symlink on
+            # Debian and Ubuntu, while signed release entrypoints are required to
+            # be regular files before a generation is admitted.
+            f"        return [str(self.verified.bin('python')), '-c', {body!r}, "
             f"{str(self.home / 'detached.pid')!r}]\n"
             "    def operate_env(self, _cfg):\n"
             "        return {}\n"
@@ -6584,7 +6592,11 @@ class TestDetachedDescendantThroughPublicCommands(LeaseCase):
             if ownership is not None and ownership.spawn_state == run_state.SPAWN_OWNED:
                 break
             if launcher.poll() is not None:
-                self.fail(f"the public start exited early: {launcher.stderr.read()[:900]}")
+                self.fail(
+                    "the public start exited early: "
+                    f"stdout={launcher.stdout.read()[:900]} "
+                    f"stderr={launcher.stderr.read()[:900]}"
+                )
             time.sleep(0.1)
         self.assertIsNotNone(ownership)
 

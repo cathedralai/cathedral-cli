@@ -21,6 +21,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV="${CATHEDRAL_DEV_VENV:-$ROOT/.venv}"
 PYTEST_PIN="pytest==8.3.0"
+SETUPTOOLS_PIN="setuptools==80.9.0"
 
 find_supported_python() {
     if [ -n "${PYTHON:-}" ]; then echo "$PYTHON"; return; fi
@@ -45,7 +46,7 @@ if [ ! -x "$VENV/bin/python" ]; then
     "$BASE" -m venv "$VENV"
 fi
 "$VENV/bin/python" -m pip install --quiet --upgrade pip
-"$VENV/bin/python" -m pip install --quiet "$PYTEST_PIN"
+"$VENV/bin/python" -m pip install --quiet "$PYTEST_PIN" "$SETUPTOOLS_PIN"
 
 echo "provisioned $VENV"
 echo "  python: $("$VENV/bin/python" -V 2>&1)"

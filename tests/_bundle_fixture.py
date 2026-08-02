@@ -249,7 +249,14 @@ class BundleFixture:
             f'[build-system]\nrequires=["setuptools"]\nbuild-backend="setuptools.build_meta"\n'
             f'[project]\nname="{name}"\nversion="0.0.1"\n{dep}[project.scripts]\n{eps}'
             f'[tool.setuptools.packages.find]\nwhere=["."]\n')
-        subprocess.run([str(self.trusted), "-m", "pip", "wheel", "--no-build-isolation", "--no-deps",
+        # Build the synthetic test wheels with the Gate 0 development
+        # environment. The trusted parent is intentionally a bare CPython on
+        # some supported hosts, including setup-python, and is tested as such by
+        # the real installer path below. Requiring a build backend in that bare
+        # parent makes every test fail during fixture setup before the installer
+        # is exercised. The development environment pins setuptools, so this
+        # remains reproducible and offline after provisioning.
+        subprocess.run([sys.executable, "-m", "pip", "wheel", "--no-build-isolation", "--no-deps",
                         "-w", str(self.wheelhouse), str(src)], check=True, capture_output=True)
         return next(self.wheelhouse.glob(f"{name.replace('-', '_')}-*.whl"))
 
