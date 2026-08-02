@@ -15,7 +15,7 @@ from typing import Any
 
 from cathedral_node import config, engines, lockfile, machine, paths
 from cathedral_node.contracts import Envelope
-from cathedral_node.contracts.codes import Exit
+from cathedral_node.contracts.codes import Exit, describe
 from cathedral_node.contracts.version import PROTOCOL_VERSION, RESULT_SCHEMA, schema_id
 from cathedral_node.engines import installer
 from cathedral_node.runner import Context, command
@@ -69,8 +69,13 @@ def _brief(ctx: Context, lock, roles, states, group) -> Envelope:
 
 
 def _markdown(facts: dict[str, Any], roles: list[str]) -> str:
+    # `describe`, not `member.__doc__`. Enum members inherit the CLASS docstring,
+    # so every row rendered the same sentence -- "Process exit codes. Stable within
+    # a MAJOR protocol version." -- twelve times. The table an agent branches on
+    # said nothing about what any individual code means, while `DESCRIPTIONS` (which
+    # a sibling test already holds to being distinct per code) went unused.
     exit_lines = "\n".join(
-        f"| `{int(member)}` | `{member.name}` | {(member.__doc__ or '').strip()} |" for member in Exit
+        f"| `{int(member)}` | `{member.name}` | {describe(member).strip()} |" for member in Exit
     )
     role_sections = "\n\n".join(_role_section(name, facts[name]) for name in roles)
     scope = ", ".join(facts[name]["title"] for name in roles)
