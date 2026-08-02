@@ -133,7 +133,12 @@ def fetch_channel(base_url: str, cache_dir: Path, signers_path: Path, identity: 
         return None, f"could not fetch the release manifest: {exc}"
     ok, reason, auth = release_lock.verify_manifest(
         manifest_bytes, signature, allowed, identity, python_info=python_info, abi=abi,
-        platform_token=platform_token, now=_dt.datetime.now(_dt.timezone.utc))
+        platform_token=platform_token, now=_dt.datetime.now(_dt.timezone.utc),
+        # Fetching from a channel IS an acquisition, so the acquisition window
+        # applies: an expired release must not be newly installed. (A release
+        # already retained on disk keeps running -- that is RETAINED_RUNTIME, and
+        # the distinction is why `mode` is mandatory.)
+        mode=release_lock.CANDIDATE_ACQUISITION)
     if not ok or auth is None:
         return None, f"the channel manifest did not verify: {reason}"
 

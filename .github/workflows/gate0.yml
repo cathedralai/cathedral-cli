@@ -1,0 +1,74 @@
+name: Gate 0
+
+# Why this exists at all: until now nothing ran this suite automatically, and the
+# cost of that was not hypothetical. tests/test_gate0.py pinned its verifying
+# clock to a fixed date while the bundle fixture stamped releases from the real
+# clock, so on 2026-07-31T06:00Z every release the fixture built became "too far
+# in the future" and the entire gate went red. It stayed red, unnoticed, because
+# the only thing that ran it was a person choosing to.
+#
+# The `schedule` trigger below is the direct lesson from that bug: a suite that
+# can fail with no commit needs a run that happens with no commit.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Daily. A time bomb of the kind above lands on a calendar boundary, not on a
+    # push, so pushes alone would not have caught it.
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate0-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate0:
+    runs-on: ubuntu-latest
+    # The suite provisions real virtualenvs and pip-installs real wheels for each
+    # signed role, so it is minutes-per-test in places rather than seconds. This
+    # ceiling is deliberately generous; treat a timeout as a genuine regression in
+    # the suite's cost, not as a number to keep raising.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # The node supports CPython 3.11-3.13 (3.14 removed APIs the pinned
+          # engines need). Test the ends of that range, not just one point in it.
+          python-version: '3.12'
+
+      - name: Gate 0 acceptance
+        # run-gate0.sh provisions .venv via scripts/dev-env.sh and then runs the
+        # Revision 5 command verbatim. Calling the script rather than pasting the
+        # pytest line keeps CI and the documented operator command identical --
+        # if they diverge, CI is no longer evidence about what an operator gets.
+        run: ./run-gate0.sh
+
+  # The gate suite is the acceptance evidence, but it is slow enough that a
+  # trivially broken tree should not have to wait 90 minutes to say so.
+  import-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: The CLI imports and answers on the supported interpreter range
+        # Both ends of the supported range, because the Gate 0 job pins one
+        # version and a 3.11-only or 3.13-only breakage would otherwise ship.
+        run: |
+          python -V
+          python ./cathedral capabilities --json > /dev/null
+          python ./cathedral explain compute > /dev/null

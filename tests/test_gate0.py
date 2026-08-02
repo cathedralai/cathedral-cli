@@ -49,7 +49,14 @@ from cathedral_node.verified import VerifiedActiveGroup, VerifiedRole
 
 from _bundle_fixture import IDENTITY, BundleFixture, locate_trusted_python
 
-_NOW = dt.datetime(2026, 7, 31, tzinfo=dt.timezone.utc)
+# The verifying clock MUST track the same clock the fixture stamps releases with,
+# not a pinned date. `BundleFixture.bundle` sets created_at to the real now minus a
+# day; release_lock refuses anything more than _MAX_SKEW (6h) ahead of the verifying
+# clock. Pinned at 2026-07-31T00:00Z, this suite went permanently red at 06:00Z that
+# day -- every release the fixture built was suddenly "too far in the future" -- and
+# nothing noticed, because there was no CI. Read once at import so a single run still
+# compares against one instant.
+_NOW = dt.datetime.now(dt.timezone.utc)
 ROLES = ("distill", "compute", "validator")
 
 

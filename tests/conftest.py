@@ -42,7 +42,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import pathlib
 import re
+import tempfile
+
+from cathedral_node import release_lock
 from pathlib import Path
 
 import pytest
@@ -327,7 +331,83 @@ def _filtering_options(config: pytest.Config) -> list[str]:
     return found
 
 
+def _safe_temporary_root() -> pathlib.Path:
+    """Pick a scratch directory the product's own trust-root rule will accept.
+
+    `release_lock.read_trust_file` walks EVERY ancestor of a trust root and
+    refuses the chain if any entry is foreign-owned or group/world-writable,
+    because whoever can write an ancestor can swap the signing keys. That rule is
+    correct and is not what we are working around here -- we are giving the
+    fixtures somewhere it can actually be satisfied.
+
+    The default TMPDIR cannot be: `/tmp` is world-writable (drwxrwxrwt) on every
+    Linux box, so it fails as an ancestor no matter how tight the leaf is. The
+    repo root cannot be either: `git clone` under the common umask 002 leaves it
+    group-writable. Measured on a fresh clone, both refusals are real and each
+    one alone turns the whole Gate 0 suite red.
+
+    So: try the usual per-user cache locations, create our own leaf 0700, and
+    accept the first candidate whose entire chain passes `_owner_ok` -- the
+    product's predicate, imported rather than re-implemented, so this can never
+    drift from the rule it is trying to satisfy.
+    """
+    candidates = []
+    xdg = os.environ.get("XDG_CACHE_HOME")
+    if xdg:
+        candidates.append(pathlib.Path(xdg))
+    candidates.append(pathlib.Path.home() / ".cache")
+    candidates.append(pathlib.Path.home())
+
+    rejected = []
+    for parent in candidates:
+        root = parent / "cathedral-cli-pytest"
+        try:
+            root.mkdir(mode=0o700, parents=True, exist_ok=True)
+            os.chmod(root, 0o700)
+        except OSError as exc:
+            rejected.append(f"{root}: {exc}")
+            continue
+        resolved = root.resolve()
+        bad = None
+        for ancestor in [resolved, *resolved.parents]:
+            try:
+                info = os.stat(ancestor)
+            except OSError as exc:
+                bad = f"{ancestor}: {exc}"
+                break
+            if not release_lock._owner_ok(info):
+                bad = f"{ancestor} is foreign-owned or writable by others"
+                break
+        if bad is None:
+            return root
+        rejected.append(bad)
+
+    raise RuntimeError(
+        "no usable scratch directory: the suite builds signed-delivery trust "
+        "roots, and every candidate has an ancestor the product refuses.\n  "
+        + "\n  ".join(rejected)
+        + "\nFix the offending directory's ownership/permissions, or point "
+        "XDG_CACHE_HOME at a private directory you own."
+    )
+
+
+def _isolate_temporary_state() -> None:
+    """Point the suite's temporary files somewhere signed delivery can work.
+
+    Both halves matter and neither is the operator's job to remember: a private
+    TMPDIR (so no world-writable ancestor) and umask 077 (so the directories the
+    fixtures create are not born group-writable). A fresh clone should be able to
+    run the documented command and get the documented result.
+    """
+    root = _safe_temporary_root()
+    for name in ("TMPDIR", "TEMP", "TMP"):
+        os.environ[name] = str(root)
+    tempfile.tempdir = None  # force tempfile to re-read the environment
+    os.umask(0o077)
+
+
 def pytest_configure(config: pytest.Config) -> None:
+    _isolate_temporary_state()
     config.addinivalue_line(
         "markers",
         "real_engine: a live signed cathedral engine is required (Gate 1/2 only). These "
