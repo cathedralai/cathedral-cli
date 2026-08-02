@@ -82,15 +82,30 @@ half-installed one is not.
 
 ### Owner-controlled settings
 
-`burn_fraction`, `burn_destination`, and `lane_allocation` are yours. They live
-in the node's configuration, not in engine files, so an engine upgrade cannot
-reach them. `update` also snapshots them before and after and warns loudly if
-any moved — an alarm for something that should be structurally impossible.
+What is yours is what you will **accept**: `require_policy` (which weight-policy
+contract) and `weight_policy_key` (whose signature), plus your wallet and
+network. They live in the node's configuration, not in engine files, so an
+engine upgrade cannot reach them. `update` snapshots them before and after and
+warns loudly if any moved — an alarm for something that should be structurally
+impossible.
 
 ```bash
-cathedral config get validator burn_fraction
-cathedral config set validator burn_fraction 0.10
+cathedral config get validator require_policy
+cathedral config get validator weight_policy_key
 ```
+
+The signing key is public by design. It is meant to be read aloud and checked
+against Cathedral's published key, so it is shown in full in both the human and
+`--json` views rather than masked.
+
+**The burn share and the lane allocation are not yours, and are not settings.**
+They arrive inside the Cathedral-signed weight vector and from Cathedral-signed
+burn and allocation documents; nothing local changes them. Earlier versions of
+this document — and of the config schema — offered `burn_fraction`,
+`burn_destination` and `lane_allocation` as editable fields, which was worse than
+useless: it let an operator believe they had changed the economics when nothing
+had changed. If you want different economics, the lever is which contract and
+which key you accept, above.
 
 ## Recovering
 
