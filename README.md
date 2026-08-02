@@ -39,4 +39,6 @@ python3.11 ./cathedral capabilities --json
 
 Replace `compute` with `distill` or `validator`.
 
-Engine installation requires a signed Cathedral release. Rewards and chain writes stay off by default in early beta.
+Everything above works on a fresh clone today.
+
+`setup` and `test` additionally need a signed Cathedral release, which is not published yet — so they fail closed until it is. That is the design, not a fault: the CLI installs no engine it cannot verify. Rewards and chain writes stay off by default in early beta.
