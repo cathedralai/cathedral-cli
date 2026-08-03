@@ -36,22 +36,33 @@
     "distill": {
       "extras": [],
       "launch_mode": "cybergym",
-      "entrypoints": ["cathedral-cybergym-agent"],
-      "server_entrypoints": ["cathedral-cybergym-server"],
+      "entrypoints": [
+        "cathedral-cybergym-agent"
+      ],
+      "server_entrypoints": [
+        "cathedral-cybergym-server"
+      ],
       "protocol": "1.0.0"
     },
     "compute": {
       "extras": [],
       "launch_mode": "worker",
-      "entrypoints": ["cathedral"],
+      "entrypoints": [
+        "cathedral"
+      ],
       "server_entrypoints": [],
       "protocol": "1.0.0"
     },
     "validator": {
-      "extras": ["integration"],
+      "extras": [
+        "integration"
+      ],
       "launch_mode": "integration",
-      "entrypoints": ["cathedral-validator-integration-preview"],
-      "server_entrypoints": ["cathedral-validator"],
+      "entrypoints": [
+        "cathedral-validator-integration-preview",
+        "cathedral-validator"
+      ],
+      "server_entrypoints": [],
       "protocol": "1.0.0"
     }
   },
