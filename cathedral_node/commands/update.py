@@ -115,7 +115,8 @@ def update(ctx: Context) -> Envelope:
     ok, detail, result = installer.install_release(
         source.bundle_dir, lock, source.signers_path, identity=source.identity,
         on_progress=lambda label, note: ctx.console.progress(label, note),
-        log_path=paths.logs_dir() / "update.log")
+        log_path=paths.logs_dir() / "update.log",
+        revocation_channel=_release.channel(ctx))
     if not ok:
         # Do not claim the prior release "was kept": whether it was depends on
         # whether the rollback completed, and when it did not the node is left with

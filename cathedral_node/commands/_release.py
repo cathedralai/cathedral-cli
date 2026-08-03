@@ -35,6 +35,13 @@ _ARTIFACT_MAX = 4 * (1 << 30)      # 4 GiB
 _LOOPBACK = {"127.0.0.1", "::1", "localhost"}
 
 
+def channel(ctx) -> str | None:
+    """The configured release channel, if any. The signed revocation snapshot is
+    served from the same channel base, so acquisition can retain its first
+    snapshot instead of failing closed on a fresh node with an empty cache."""
+    return getattr(ctx.args, "channel", None) or os.environ.get(ENV_CHANNEL)
+
+
 def default_signers_path() -> Path:
     override = os.environ.get(ENV_SIGNERS)
     return Path(override).expanduser() if override else paths.home() / "allowed_signers"

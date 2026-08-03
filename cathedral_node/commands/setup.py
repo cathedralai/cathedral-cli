@@ -85,7 +85,8 @@ def setup(ctx: Context) -> Envelope:
 
     ok, detail, result = installer.install_release(source.bundle_dir, lock, source.signers_path,
                                                    identity=source.identity, on_progress=progress,
-                                                   log_path=log_path)
+                                                   log_path=log_path,
+                                                   revocation_channel=_release.channel(ctx))
     if not ok:
         return Envelope.fail("setup", C.E_ENGINE_INSTALL_FAILED,
                              "could not install the signed release",
