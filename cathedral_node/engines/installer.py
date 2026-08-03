@@ -956,6 +956,16 @@ import importlib.metadata as m, importlib.util as u, sys
 try:
     dist = m.distribution(sys.argv[1])
     tops = [t for t in (dist.read_text("top_level.txt") or "").splitlines() if t.strip()]
+    if not tops:
+        # top_level.txt is optional metadata that modern build backends omit;
+        # derive the importable roots from the installed file records instead.
+        roots = set()
+        for f in (dist.files or []):
+            first = f.parts[0]
+            if len(f.parts) == 1 and first.endswith(".py"):
+                first = first[:-3]
+            roots.add(first)
+        tops = sorted(r for r in roots if r.isidentifier())
 except Exception:
     print("missing"); raise SystemExit
 ok = bool(tops) and all(u.find_spec(t) is not None for t in tops)
@@ -1087,6 +1097,11 @@ def _parse_requires(req: str) -> tuple[str | None, str | None, bool]:
 
 def _tags_compatible(tags: list[str], node_abi: str, node_platform: str) -> bool:
     plat_norm = re.sub(r"[-.]", "_", node_platform)
+    # A Linux node accepts the standard portable-Linux wheel tags for its own
+    # architecture: manylinux (glibc) and musllinux (musl) are the forms PyPI
+    # actually distributes; a bare linux_<arch> tag is what a local build emits.
+    # The architecture must match exactly — the prefix alone never suffices.
+    arch = plat_norm.split("_", 1)[1] if plat_norm.startswith("linux_") else None
     for tag in tags:
         parts = tag.split("-")
         if len(parts) != 3:
@@ -1095,7 +1110,9 @@ def _tags_compatible(tags: list[str], node_abi: str, node_platform: str) -> bool
         if abi == "none" and plat == "any":
             return True
         abi_ok = abi in (node_abi, "abi3", "none")
-        plat_ok = plat == "any" or plat in plat_norm or plat_norm.startswith(plat.split("_")[0])
+        plat_ok = plat == "any" or plat in plat_norm or plat_norm.startswith(plat.split("_")[0]) or (
+            arch is not None and plat.endswith(f"_{arch}")
+            and plat.startswith(("manylinux", "musllinux", "linux")))
         if abi_ok and plat_ok:
             return True
     return False
